@@ -1,5 +1,6 @@
+import jotaiStore from "@/atoms";
+import loginDialogAtom from "@/atoms/login-dialog";
 import type { ApiResponse } from "@/types";
-// import type { ApiResponse } from "@/types";
 import axios, {
 	type AxiosResponse,
 	type InternalAxiosRequestConfig,
@@ -9,20 +10,22 @@ import { toast } from "sonner";
 
 const baseURL =
 	process.env.NODE_ENV === "development"
-		? "http://localhost:3000/api/v1"
-		: "https://xuebantong.org/api/v1";
+		? "http://localhost:8080/api/v1"
+		: "https://agent-dashboard/api/v1";
 
 const apiClient = axios.create({
 	baseURL: baseURL,
 	withCredentials: true,
 });
 
+// 定义业务状态码类型
 const resultEnum: Record<string, number> = {
 	success: 0, // 请求成功
 	unauthorized: 401, // token 无效
 	sensitive: 105, // 涉及敏感词
 };
 
+// 添加请求拦截器
 apiClient.interceptors.request.use(
 	(config: InternalAxiosRequestConfig) => {
 		if (typeof window !== "undefined") {
@@ -70,7 +73,7 @@ apiClient.interceptors.response.use(
 		return Promise.reject(new Error(validMsg));
 	},
 
-	// 处理非业务逻辑 如网络请求等
+	// 处理非业务逻辑 如网络请求 鉴权等
 	(error: AxiosError<ApiResponse>) => {
 		const data = error.response?.data;
 
@@ -84,7 +87,7 @@ apiClient.interceptors.response.use(
 		if (status === 401) {
 			if (typeof window !== "undefined") {
 				// Trigger login dialog to show
-				// jotaiStore.set(loginDialogAtom, true);
+				jotaiStore.set(loginDialogAtom, true);
 			}
 		}
 

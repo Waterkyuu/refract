@@ -2,47 +2,30 @@ import jotaiStore, { logoutAtom, userAtom } from "@/atoms";
 import { client } from "@/lib/auth";
 import { handleError } from "@/lib/error-handler";
 import type { User } from "@/types";
-import type { Provider } from "@supabase/supabase-js";
 
-/**
- * Get current user info from Supabase session
- */
+type provider = "google" | "github" | "vercel";
+
 const getUserInfo = async () => {
-	const {
-		data: { session },
-		error: sessionError,
-	} = await client.auth.getSession();
-
-	if (sessionError) {
-		handleError(sessionError, "Failed to get session");
-		return;
+	const { data, error } = await client.auth.getSession();
+	if (error) {
+		handleError(error, "Failed to get user info");
 	}
 
-	if (session?.access_token) {
-		localStorage.setItem("token", session.access_token);
+	if (data?.session) {
+		localStorage.setItem("token", data?.session.token);
 	}
 
-	const {
-		data: { user: supabaseUser },
-		error: userError,
-	} = await client.auth.getUser();
-
-	if (userError) {
-		handleError(userError, "Failed to get user info");
-		return;
-	}
-
-	if (supabaseUser) {
-		const { id, email, user_metadata, created_at, app_metadata } = supabaseUser;
+	if (data?.user) {
+		const { id, name, email, image, createdAt, updatedAt, banned } = data.user;
 
 		const user: User = {
-			id,
-			userName: user_metadata?.name || user_metadata?.full_name || "",
-			email: email || "",
-			avatar: user_metadata?.avatar_url || user_metadata?.picture || null,
-			createdAt: created_at,
-			updatedAt: user_metadata?.updated_at || created_at,
-			banned: app_metadata?.banned ?? null,
+			id: id,
+			userName: name,
+			email: email,
+			avatar: image || null,
+			createdAt: createdAt.toISOString(),
+			updatedAt: updatedAt.toISOString(),
+			banned: banned,
 		};
 
 		jotaiStore.set(userAtom, user);
@@ -51,109 +34,61 @@ const getUserInfo = async () => {
 	}
 };
 
-/**
- * Send sign-in OTP (magic link) to user's email
- */
 const sendSignInOtp = async (email: string) => {
-	const { error } = await client.auth.signInWithOtp({
-		email,
-		options: {
-			// Should be set in Supabase dashboard redirect URLs, but can be added here as fallback
-			emailRedirectTo: undefined,
-		},
+	const { error } = await client.auth.emailOtp.sendVerificationOtp({
+		email: email,
+		type: "sign-in",
 	});
-
 	if (error) {
-		handleError(error, "Failed to send OTP");
-		throw error;
+		handleError(error);
 	}
 };
 
-/**
- * Verify OTP code and sign in
- */
 const signInWithOtp = async (email: string, otpCode: string) => {
-	const { data, error } = await client.auth.verifyOtp({
-		email,
-		token: otpCode,
-		type: "email",
+	const { data, error } = await client.auth.signIn.emailOtp({
+		email: email,
+		otp: otpCode,
 	});
 
 	if (error) {
-		handleError(error, "Login failed");
-		throw error;
+		handleError(error, "Login faild");
 	}
 
-	if (data.user) {
-		// Trigger user info update after successful login
-		await getUserInfo();
-	}
-
-	console.log("Successfully logged in:", data);
-	return data;
+	console.log("Successfully login:", data);
 };
 
-/**
- * Handle OAuth sign-in with specified provider
- */
-const handleOauthSignIn = async (provider: Provider) => {
-	const baseUrl =
-		process.env.NEXT_PUBLIC_VERCEL_URL ||
-		process.env.NEXT_PUBLIC_BASE_URL ||
-		(process.env.DEV ? "http://localhost:3000" : "");
+const handleOauthSignIn = async (provider: provider) => {
+	const callbackURL = process.env.DEV ? "http://localhost:3000" : "";
 
-	const { error } = await client.auth.signInWithOAuth({
-		provider,
-		options: {
-			redirectTo: `${baseUrl}/auth/callback`,
-			scopes: "email profile",
-		},
-	});
-
-	if (error) {
-		handleError(error, `Failed to sign in with ${provider}`);
-		throw error;
+	try {
+		await client.auth.signIn.social({
+			provider: provider,
+			callbackURL: callbackURL || window.location.origin,
+		});
+	} catch (error) {
+		handleError(error);
 	}
 };
 
-/**
- * Sign in with Google
- */
 const signInGoogle = async () => {
-	await handleOauthSignIn("google" as Provider);
+	await handleOauthSignIn("google");
 };
 
-/**
- * Sign in with GitHub
- */
 const signInGithub = async () => {
-	await handleOauthSignIn("github" as Provider);
+	await handleOauthSignIn("github");
 };
 
-/**
- * Sign in with Vercel
- */
 const signInVercel = async () => {
-	await handleOauthSignIn("vercel" as Provider);
+	await handleOauthSignIn("vercel");
 };
 
-/**
- * Sign out current user
- */
 const signOut = async () => {
 	try {
-		const { error } = await client.auth.signOut();
-
-		if (error) {
-			handleError(error, "Failed to sign out");
-			throw error;
-		}
-
+		await client.auth.signOut();
 		jotaiStore.set(logoutAtom);
 		localStorage.removeItem("token");
 	} catch (error) {
-		handleError(error, "Sign out failed");
-		throw error;
+		handleError(error);
 	}
 };
 

@@ -12,6 +12,14 @@ You are a professional and senior full-stack engineer and UI/UX expert who built
 - `pnpm lint:write` - Lint code
 - `pnpm check:write` - Lint & Format codes
 
+## Git Workflow
+- After completing a feature, bug fix, or refactoring, and confirming the code is functional, **you must automatically perform a Git commit**.
+- First, run `git diff` to check the changes, then run `git add .`.
+- Use `golangci-lint` to check the code in the server directory for style, and use `pnpm check` to check the code in the client directory for style.
+- Finally, run `git commit -m "..."`.
+- Commit messages must follow Conventional Commits guidelines (e.g., feat:, fix:, refactor:, etc.).
+- Please execute these terminal commands directly; do not ask if you need to commit.
+
 ## Code Style/Quality   
 - Comments are in English.
 - Write maintainable and readable code. Code should not be redundant.
@@ -30,6 +38,7 @@ You are a professional and senior full-stack engineer and UI/UX expert who built
     "grid h-full w-full grid-cols-1 divide-y pt-12 md:divide-x md:divide-y-0",
     isPreview && "md:grid-cols-2",
     )`
+- Don't write `export` before every function; just use a unified `export` at the end. For example export { xxx, xxx }
 
 ## UI/UX Design
 - Use transition-colors duration-200 for Interaction & Cursor
