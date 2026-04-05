@@ -26,30 +26,27 @@ const AmbientGlow = ({ className, size = "default" }: AmbientGlowProps) => {
 				className,
 			)}
 		>
-			{/* Silver crystal core glow */}
 			<div
 				className="absolute inset-0 rounded-[2.5rem]"
 				style={{
 					background:
-						"radial-gradient(circle, rgba(192, 200, 210, 0.45) 0%, rgba(160, 174, 192, 0.2) 35%, rgba(120, 140, 165, 0.08) 60%, transparent 80%)",
+						"radial-gradient(circle, rgba(140, 150, 165, 0.55) 0%, rgba(110, 125, 148, 0.3) 35%, rgba(75, 90, 115, 0.12) 60%, transparent 80%)",
 					filter: "blur(40px)",
 				}}
 			/>
-			{/* Crystal refraction shimmer */}
 			<div
 				className="absolute inset-0 rounded-[2.5rem]"
 				style={{
 					background:
-						"radial-gradient(ellipse at 30% 40%, rgba(220, 225, 235, 0.35) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(200, 210, 225, 0.25) 0%, transparent 50%)",
+						"radial-gradient(ellipse at 30% 40%, rgba(180, 188, 200, 0.4) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(155, 165, 182, 0.3) 0%, transparent 50%)",
 					filter: "blur(50px)",
 				}}
 			/>
-			{/* Outer frosted halo */}
 			<div
 				className="absolute inset-0 rounded-[2.5rem]"
 				style={{
 					background:
-						"radial-gradient(circle, rgba(180, 190, 205, 0.15) 0%, rgba(140, 155, 175, 0.06) 50%, transparent 75%)",
+						"radial-gradient(circle, rgba(130, 142, 160, 0.22) 0%, rgba(95, 110, 135, 0.1) 50%, transparent 75%)",
 					filter: "blur(70px)",
 				}}
 			/>
