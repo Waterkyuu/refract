@@ -215,7 +215,7 @@ const processSSEStream = async (
  */
 export const useChat = (options: UseChatOptions = {}): UseChatReturn => {
 	const {
-		api = "http://localhost:8080/api/v1/gen/text",
+		api = "http://localhost:3000/api/v1/gen/text",
 		body,
 		onFinish,
 		onError,
