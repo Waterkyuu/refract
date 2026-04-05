@@ -112,6 +112,7 @@ const extractToolEventsFromMessages = (
 };
 
 export type { UseChatReturn, ChatStatus };
+export { extractToolEventsFromMessages };
 
 const useAgentChat = (options: UseChatOptions = {}): UseChatReturn => {
 	const {

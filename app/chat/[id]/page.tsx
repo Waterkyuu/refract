@@ -19,7 +19,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAtomValue } from "jotai";
 import { Monitor } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import ChatHeader from "../components/chat-header";
 import DebugPanel from "../components/debug-panel";
 import MessageArea from "../components/message-area";
 import VncPanel from "../components/vnc-panel";
@@ -81,8 +80,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 
 	return (
 		<div className="flex h-screen w-screen flex-col">
-			<ChatHeader />
-
 			{isMobile ? (
 				<div className="flex flex-1 flex-col overflow-hidden">
 					<MessageArea
@@ -147,7 +144,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 									}}
 									isLoading={isLoading}
 									stop={stop}
-									size="md"
 								/>
 							</div>
 						</div>

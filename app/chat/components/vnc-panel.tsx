@@ -55,4 +55,5 @@ const VncPanel = () => {
 	);
 };
 
+export { VncViewer };
 export default memo(VncPanel);
