@@ -12,7 +12,9 @@
 		"format:write": "biome format --write .",
 		"check": "biome check .",
 		"check:write": "biome check --write .",
-		"prepare": "husky"
+		"prepare": "husky",
+		"test": "jest",
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@neondatabase/neon-js": "0.2.0-beta.1",
@@ -50,6 +52,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@playwright/test": "^1.59.1",
 		"@tailwindcss/postcss": "^4",
 		"@testing-library/dom": "^10.4.1",
 		"@testing-library/jest-dom": "^6.9.1",

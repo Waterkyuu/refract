@@ -1,9 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, ChevronRight, Star } from "lucide-react";
-import Link from "next/link";
+import { AgentWorkspace } from "@/components/agent/agent-workspace";
 
 export default function LandingPage() {
-	return (
-		null
-	);
+	return <AgentWorkspace />;
 }
