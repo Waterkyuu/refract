@@ -26,22 +26,31 @@ const AmbientGlow = ({ className, size = "default" }: AmbientGlowProps) => {
 				className,
 			)}
 		>
-			{/* Blue gradient glow effect */}
+			{/* Silver crystal core glow */}
 			<div
 				className="absolute inset-0 rounded-[2.5rem]"
 				style={{
 					background:
-						"radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.2) 40%, transparent 70%)",
+						"radial-gradient(circle, rgba(192, 200, 210, 0.45) 0%, rgba(160, 174, 192, 0.2) 35%, rgba(120, 140, 165, 0.08) 60%, transparent 80%)",
 					filter: "blur(40px)",
 				}}
 			/>
-			{/* Secondary blue glow for enhanced effect */}
+			{/* Crystal refraction shimmer */}
 			<div
 				className="absolute inset-0 rounded-[2.5rem]"
 				style={{
 					background:
-						"radial-gradient(circle, rgba(96, 165, 250, 0.3) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 80%)",
-					filter: "blur(60px)",
+						"radial-gradient(ellipse at 30% 40%, rgba(220, 225, 235, 0.35) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(200, 210, 225, 0.25) 0%, transparent 50%)",
+					filter: "blur(50px)",
+				}}
+			/>
+			{/* Outer frosted halo */}
+			<div
+				className="absolute inset-0 rounded-[2.5rem]"
+				style={{
+					background:
+						"radial-gradient(circle, rgba(180, 190, 205, 0.15) 0%, rgba(140, 155, 175, 0.06) 50%, transparent 75%)",
+					filter: "blur(70px)",
 				}}
 			/>
 		</div>
