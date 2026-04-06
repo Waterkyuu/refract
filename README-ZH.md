@@ -1,10 +1,15 @@
 # Fire Wave Agent
 
+[English](./README.md) | [中文](./README-ZH.md)
+
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Waterkyuu/agent-dashboard&env=ZHIPU_API_KEY,E2B_API_KEY,PUBLIC_NEON_AUTH_URL,NEON_DATA_PUBLIC_API_URL,CLOUDFLARE_ACCOUNT_ID,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY&envDescription=Fire%20Wave%20Agent%20所需的%20API%20密钥和服务凭证&project-name=fire-wave-agent&repository-name=agent-dashboard)
 
 一个自主控制电脑的 AI Agent Web 应用 — 类似于 OpenAI Operator。基于智谱 AI 模型和 E2B 沙盒，提供实时 Ubuntu 桌面环境，支持浏览器自动化、网页搜索、Shell 命令执行和 Python 代码解释。
 
-![Fire Wave Agent](screenshots/image.png)
+<p float="left">
+  <img src="screenshots/image2.png" width="49%" />
+  <img src="screenshots/image1.png" width="49%" />
+</p>
 
 ## 功能特性
 
