@@ -7,8 +7,8 @@
 一个自主控制电脑的 AI Agent Web 应用 — 类似于 OpenAI Operator。基于智谱 AI 模型和 E2B 沙盒，提供实时 Ubuntu 桌面环境，支持浏览器自动化、网页搜索、Shell 命令执行和 Python 代码解释。
 
 <p float="left">
-  <img src="screenshots/image1.png" width="49%" />
   <img src="screenshots/image2.png" width="49%" />
+  <img src="screenshots/image1.png" width="49%" />
 </p>
 
 ## 功能特性

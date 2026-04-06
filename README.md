@@ -14,8 +14,8 @@ Note: that many features are still incomplete; this project is currently just a 
 </div>
 
 <p float="left">
-  <img src="screenshots/image1.png" width="49%" />
   <img src="screenshots/image2.png" width="49%" />
+  <img src="screenshots/image1.png" width="49%" />
 </p>
 
 ## Features
