@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth/server";
+import type { ApiResponse } from "@/types/api";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -11,10 +12,12 @@ const authMiddleware = async (request: NextRequest) => {
 		!request.nextUrl.pathname.startsWith("/auth")
 	) {
 		if (request.nextUrl.pathname.startsWith("/api")) {
-			return NextResponse.json(
-				{ success: false, message: "Unauthorized request" },
-				{ status: 401 },
-			);
+			const body: ApiResponse = {
+				code: 401,
+				success: false,
+				message: "Unauthorized request",
+			};
+			return NextResponse.json(body, { status: 401 });
 		}
 
 		const url = request.nextUrl.clone();
