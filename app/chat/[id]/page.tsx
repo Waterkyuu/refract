@@ -127,14 +127,9 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					orientation="horizontal"
 					className="flex flex-1 overflow-hidden"
 				>
-					<ResizablePanel defaultSize={35} minSize={25} maxSize={60}>
+					<ResizablePanel defaultSize="30%" maxSize="50%" minSize="30%">
 						<div className="flex h-full w-full flex-col">
-							<MessageArea
-								messages={messages}
-								thinkingTime={thinkingTime}
-								className="flex-1"
-							/>
-							<DebugPanel />
+							<MessageArea messages={messages} thinkingTime={thinkingTime} />
 							<div className="flex w-full items-center justify-center px-4 py-2">
 								<InputField
 									input={input}
@@ -149,7 +144,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 						</div>
 					</ResizablePanel>
 					<ResizableHandle withHandle />
-					<ResizablePanel defaultSize={65} minSize={40}>
+					<ResizablePanel defaultSize="70%" minSize="50%" maxSize="70%">
 						<VncPanel />
 					</ResizablePanel>
 				</ResizablePanelGroup>

@@ -26,9 +26,9 @@ test.describe("Chat Flow E2E", () => {
 
 	test("chat page shows resizable panels on desktop", async ({
 		page,
-		browserName,
+		isMobile,
 	}) => {
-		test.skip(browserName === "Mobile Chrome", "Mobile layout differs");
+		test.skip(!!isMobile, "Mobile layout differs");
 
 		await page.goto("/chat/test-session-id");
 
