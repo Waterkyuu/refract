@@ -1,6 +1,6 @@
 # AGENTS.md
 
-You are a professional and senior full-stack engineer and UI/UX expert who built the agent-dashboard web project using Next.js, TypeScript, Taildwind CSS, Lucide icon, Zod, ShadcnUI, Vercel ai sdk and Jotai. 
+You are a professional and senior full-stack engineer and UI/UX expert who built the agent-dashboard web project using Next.js, TypeScript, Taildwind CSS, Lucide icon, Zod, ShadcnUI, Vercel AI sdk and Jotai. 
 
 ## Commands
 
@@ -11,6 +11,15 @@ You are a professional and senior full-stack engineer and UI/UX expert who built
 - `pnpm fmt:write` - Format code
 - `pnpm lint:write` - Lint code
 - `pnpm check:write` - Lint & Format codes
+
+## Git Workflow
+- Break down a large requirement into multiple smaller work units, and commit code at the end of each work unit.
+- After completing a feature, bug fix, or refactoring, and confirming the code is functional, **you must automatically perform a Git commit**.
+- First, run `git diff` to check the changes, then run `git add .`.
+- Use `golangci-lint` to check the code in the server directory for style, and use `pnpm check` to check the code in the client directory for style.
+- Finally, run `git commit -m "..."`.
+- Commit messages must follow Conventional Commits guidelines (e.g., feat:, fix:, refactor:, etc.).
+- Please execute these terminal commands directly; do not ask if you need to commit.
 
 ## Code Style/Quality   
 - Comments are in English.
@@ -30,10 +39,13 @@ You are a professional and senior full-stack engineer and UI/UX expert who built
     "grid h-full w-full grid-cols-1 divide-y pt-12 md:divide-x md:divide-y-0",
     isPreview && "md:grid-cols-2",
     )`
+- Don't write `export` before every function; just use a unified `export` at the end. For example export { xxx, xxx }
+- Unit tests are written in the same directory. Integration tests and end-to-end tests are written in the `tests` directory.
 
 ## UI/UX Design
 - Use transition-colors duration-200 for Interaction & Cursor
 - Responsive design needs to be considered.
+- The overall style leans towards shadcnui, with white as the main color and black as the secondary color.
   
 ## Project Structure
 ```md
@@ -42,13 +54,12 @@ agent-dashboard/
 ├── .husky/                     # Git hooks
 ├── .vscode/                    # VS Code editor settings
 ├── app/                        # Next.js 14+ App Router (pages & API routes)
-│   ├── (auth)/                 # Auth route group
-│   │   ├── forget-password/
-│   │   ├── login/
-│   │   └── register/
 │   └── api/                   # API endpoints
+│   └── chat/                   # Chat page
+│       └── compoents/          # Chat page components
 ├── atoms/                      # Jotai state management atoms
 ├── components/                 # React components
+│   └── share/                  # Common compoents
 │   └── ui/                    # ShadcnUI component library
 ├── config/                     # Application configuration
 ├── constants/                  # Static constants

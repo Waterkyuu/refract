@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fire Wave Agent
+
+An autonomous AI agent web application that controls a computer — similar to OpenAI Operator. Powered by Zhipu AI models and E2B sandboxes, it provides a real-time Ubuntu desktop environment with browser automation, web search, shell command execution, and Python code interpretation.
+
+![Fire Wave Agent](screenshots/image.png)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Waterkyuu/agent-dashboard&env=ZHIPU_API_KEY,E2B_API_KEY,PUBLIC_NEON_AUTH_URL,NEON_DATA_PUBLIC_API_URL,CLOUDFLARE_ACCOUNT_ID,R2_ACCESS_KEY_ID,R2_SECRET_ACCESS_KEY&envDescription=API%20keys%20and%20service%20credentials%20required%20by%20Fire%20Wave%20Agent&project-name=fire-wave-agent&repository-name=agent-dashboard)
+
+## Features
+
+- **Desktop Sandbox** — Creates an E2B Desktop Sandbox running Ubuntu with a browser, streamed via VNC in real time
+- **Browser Automation** — The agent can navigate URLs, search the web via Google, and interact with web pages autonomously
+- **Code Interpreter** — Executes Python code in an isolated Jupyter notebook sandbox with persistent variables
+- **Real-time VNC Viewer** — Watch the agent operate a browser/desktop live in a resizable panel
+- **Chat Interface** — Full conversational chat with reasoning blocks, tool call status indicators, and multi-step agent execution
+- **File Upload** — Chunked file upload supporting PDF, DOCX, MD, TXT with progress tracking
+- **Authentication** — Login via Email OTP, Google, GitHub, or Vercel OAuth
+- **Chat Session Management** — Sidebar with grouped chat history, search (Ctrl+K), rename, and delete
+- **Responsive Design** — Split panel layout on desktop, bottom sheet on mobile
+
+## Tech Stack
+
+| Category | Technology |
+|----------|-----------|
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4, Shadcn UI |
+| State Management | Jotai, TanStack React Query |
+| AI | Vercel AI SDK, Zhipu AI (GLM-4-flash) |
+| Sandbox | E2B Desktop, E2B Code Interpreter |
+| Auth | Neon Auth (OTP + OAuth) |
+| Storage | Cloudflare R2 |
+| Testing | Jest, Playwright |
+| Linting | Biome |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- pnpm 9+
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/Waterkyuu/agent-dashboard.git
+cd agent-dashboard
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create a `.env.local` file in the root directory:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Zhipu AI (Required)
+ZHIPU_API_KEY=your_zhipu_api_key
 
-## Learn More
+# E2B Sandbox (Required)
+E2B_API_KEY=your_e2b_api_key
 
-To learn more about Next.js, take a look at the following resources:
+# Model (Optional, defaults to glm-4-flash)
+GLM_MODLE=glm-4-flash
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Neon Auth (Required for authentication)
+PUBLIC_NEON_AUTH_URL=your_neon_auth_url
+NEON_DATA_PUBLIC_API_URL=your_neon_api_url
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Cloudflare R2 (Required for file upload)
+CLOUDFLARE_ACCOUNT_ID=your_account_id
+R2_ACCESS_KEY_ID=your_access_key
+R2_SECRET_ACCESS_KEY=your_secret_key
+```
 
-## Deploy on Vercel
+### Development
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm dev
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### Build
+
+```bash
+pnpm build
+pnpm start
+```
+
+## Scripts
+
+| Command | Description |
+|---------|------------|
+| `pnpm dev` | Start dev server with Turbopack |
+| `pnpm build` | Production build |
+| `pnpm start` | Start production server |
+| `pnpm check:write` | Lint & format code |
+| `pnpm test` | Run unit tests |
+| `pnpm test:e2e` | Run E2E tests |
+
+## Architecture
+
+```
+User Input --> Home Page (/) --> /chat/[id]
+                                    |
+                     +--------------+---------------+
+                     |                              |
+                Chat Panel (30%)             VNC Panel (70%)
+                - MessageArea                - E2B VNC stream
+                - InputField                - Live status badge
+                - DebugPanel
+                     |
+                POST /api/chat
+                - Zhipu AI (GLM-4-flash)
+                - 5 Tools:
+                  * createSandbox
+                  * codeInterpreter
+                  * executeShell
+                  * navigateBrowser
+                  * searchWeb
+```
+
+## License
+
+Private

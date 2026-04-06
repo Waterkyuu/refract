@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Lora } from "next/font/google";
 import "./globals.css";
+import { AppProviders } from "./providers";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -18,9 +19,8 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-	title: "Xuebantong - Smart Learning Platform",
-	description:
-		"AI-powered learning platform with idioms, language learning, writing enhancement, and Feynman technique",
+	title: "Fire Wave",
+	description: "Agent Helper",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} ${lora.variable} antialiased`}
 			>
-				{children}
+				<AppProviders>{children}</AppProviders>
 			</body>
 		</html>
 	);
