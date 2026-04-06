@@ -6,39 +6,33 @@ import {
 } from "@/atoms/chat";
 import { extractToolEventsFromMessages } from "@/hooks/use-chat";
 import type { ToolCallEvent } from "@/types/chat";
+import type { UIMessage } from "ai";
 import { getDefaultStore } from "jotai";
 import "@testing-library/jest-dom";
-
-type MockPart = {
-	type: string;
-	[key: string]: unknown;
-};
 
 const mockToolPart = (
 	toolName: string,
 	state: string,
 	toolCallId: string,
 	extra?: Record<string, unknown>,
-): MockPart => ({
-	type: `tool-${toolName}`,
-	toolCallId,
-	state,
-	input: {},
-	...extra,
-});
+) =>
+	({
+		type: `tool-${toolName}`,
+		toolCallId,
+		state,
+		input: {},
+		...extra,
+	}) as Record<string, unknown>;
 
 const mockMessage = (
 	role: "user" | "assistant",
-	parts: MockPart[],
-): {
-	id: string;
-	role: "user" | "assistant";
-	parts: MockPart[];
-} => ({
-	id: `msg-${Math.random()}`,
-	role,
-	parts,
-});
+	parts: Record<string, unknown>[],
+): UIMessage =>
+	({
+		id: `msg-${Math.random()}`,
+		role,
+		parts,
+	}) as unknown as UIMessage;
 
 describe("Event Pipeline Integration", () => {
 	beforeEach(() => {
@@ -68,10 +62,7 @@ describe("Event Pipeline Integration", () => {
 			]),
 		];
 
-		const events = extractToolEventsFromMessages(
-			messages as unknown[],
-			existingMap,
-		);
+		const events = extractToolEventsFromMessages(messages, existingMap);
 		for (const event of events) {
 			existingMap.set(event.toolCallId, event);
 			store.set(dispatchToolEventAtom, event);
@@ -98,7 +89,7 @@ describe("Event Pipeline Integration", () => {
 			]),
 		];
 
-		extractToolEventsFromMessages(messages as unknown[], existingMap);
+		extractToolEventsFromMessages(messages, existingMap);
 		expect(store.get(vncUrlAtom)).toBe("https://8080-sb-xyz.e2b.dev");
 	});
 
@@ -114,10 +105,7 @@ describe("Event Pipeline Integration", () => {
 			]),
 		];
 
-		const events = extractToolEventsFromMessages(
-			messages as unknown[],
-			existingMap,
-		);
+		const events = extractToolEventsFromMessages(messages, existingMap);
 		for (const event of events) {
 			existingMap.set(event.toolCallId, event);
 			store.set(dispatchToolEventAtom, event);
@@ -150,10 +138,7 @@ describe("Event Pipeline Integration", () => {
 			]),
 		];
 
-		const events = extractToolEventsFromMessages(
-			messages as unknown[],
-			existingMap,
-		);
+		const events = extractToolEventsFromMessages(messages, existingMap);
 		for (const event of events) {
 			existingMap.set(event.toolCallId, event);
 			store.set(dispatchToolEventAtom, event);
