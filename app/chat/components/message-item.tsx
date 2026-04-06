@@ -31,7 +31,7 @@ const ReasoningBlock = memo(({ text }: { text: string }) => {
 				<Clock className="size-3" />
 				{t("thinking")}
 			</div>
-			<p className="whitespace-pre-wrap text-[10px] text-amber-800 sm:text-xs">
+			<p className="whitespace-pre-wrap break-words text-[10px] text-amber-800 [overflow-wrap:anywhere] sm:text-xs">
 				{text}
 			</p>
 		</div>
@@ -167,7 +167,7 @@ const MessageItem = memo(
 
 				<div
 					className={cn(
-						"max-w-[80%] space-y-1",
+						"min-w-0 max-w-[80%] space-y-1",
 						isUser ? "order-first flex flex-col items-end" : "",
 					)}
 				>
@@ -195,7 +195,9 @@ const MessageItem = memo(
 									isUser ? "bg-primary text-primary-foreground" : "bg-muted",
 								)}
 							>
-								<p className="whitespace-pre-wrap">{textPart.text}</p>
+								<p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+									{textPart.text}
+								</p>
 							</div>
 						);
 					})}
