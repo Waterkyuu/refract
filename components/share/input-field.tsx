@@ -1,6 +1,7 @@
 "use client";
 
-import { firstUserInputAtom } from "@/atoms";
+import { firstUserInputAtom, userAtom } from "@/atoms";
+import loginDialogAtom from "@/atoms/login-dialog";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -78,6 +79,8 @@ const InputField = ({
 	const router = useRouter();
 
 	const [firstUserInput, setFirstUserInput] = useAtom(firstUserInputAtom);
+	const [user] = useAtom(userAtom);
+	const [, setIsLoginDialogOpen] = useAtom(loginDialogAtom);
 
 	const [attachments, setAttachments] = useState<File[]>([]);
 	const [uploadedFiles, setUploadedFiles] = useState<UploadResult[]>([]);
@@ -210,6 +213,11 @@ const InputField = ({
 			let newInput = "";
 
 			if (firstUserInput && isHome) {
+				if (!user?.id) {
+					setIsLoginDialogOpen(true);
+					return;
+				}
+
 				const sessionID = generateId();
 				router.push(`/chat/${sessionID}`);
 				return;
