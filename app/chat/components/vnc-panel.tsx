@@ -14,7 +14,7 @@ const VncViewer = memo(
 			return (
 				<div className="flex h-full w-full flex-col items-center justify-center gap-3 text-muted-foreground">
 					<Monitor className="size-12 opacity-30" />
-					<p className="text-sm">{t("waitingSandbox")}</p>
+					<p className="text-xs sm:text-sm">{t("waitingSandbox")}</p>
 				</div>
 			);
 		}
@@ -44,9 +44,11 @@ const VncPanel = () => {
 			<div className="flex items-center justify-between border-b px-4 py-2">
 				<div className="flex items-center gap-2">
 					<Monitor className="size-4 text-muted-foreground" />
-					<span className="font-medium text-sm">{t("sandboxViewer")}</span>
+					<span className="font-medium text-xs sm:text-sm">
+						{t("sandboxViewer")}
+					</span>
 					{viewerUrl && (
-						<span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-green-700 text-xs">
+						<span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 font-medium text-[10px] text-green-700 sm:text-xs">
 							{t("live")}
 						</span>
 					)}

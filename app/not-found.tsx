@@ -25,7 +25,7 @@ const NotFound = async () => {
 
 				<Link
 					href="/"
-					className="inline-flex items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 font-medium text-background text-sm transition-colors duration-200 hover:bg-foreground/80 sm:px-6 sm:py-3"
+					className="inline-flex items-center gap-2 rounded-lg bg-foreground px-5 py-2.5 font-medium text-background text-xs transition-colors duration-200 hover:bg-foreground/80 sm:px-6 sm:py-3 sm:text-sm"
 				>
 					<ArrowLeftIcon className="size-4" />
 					{t("backToHome")}

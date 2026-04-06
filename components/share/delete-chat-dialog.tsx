@@ -42,7 +42,7 @@ const DeleteChatDialog = ({ sessionId }: DeleteChatDialogProps) => {
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogTrigger className="flex w-full items-center gap-2">
-				<Trash className="size-4 text-red-600" />
+				<Trash className="size-3 text-red-600 md:size-4" />
 				{t("trigger")}
 			</AlertDialogTrigger>
 			<AlertDialogContent>

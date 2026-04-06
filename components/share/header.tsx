@@ -96,21 +96,21 @@ const Header = () => {
 							<nav className="flex flex-col space-y-4 p-4">
 								<Link
 									href="/"
-									className="py-2 font-medium text-lg"
+									className="py-2 font-medium text-base sm:text-lg"
 									onClick={toggleMenu}
 								>
 									{tMobile("home")}
 								</Link>
 								<Link
 									href="/chat/111"
-									className="py-2 font-medium text-lg"
+									className="py-2 font-medium text-base sm:text-lg"
 									onClick={toggleMenu}
 								>
 									{tMobile("chat")}
 								</Link>
 								<Link
 									href="/community"
-									className="py-2 font-medium text-lg"
+									className="py-2 font-medium text-base sm:text-lg"
 									onClick={toggleMenu}
 								>
 									{tMobile("community")}

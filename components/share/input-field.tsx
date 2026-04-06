@@ -266,10 +266,10 @@ const InputField = ({
 
 								{/* File Info */}
 								<div className="flex flex-col overflow-hidden text-left">
-									<span className="truncate font-medium text-gray-700 text-sm">
+									<span className="truncate font-medium text-gray-700 text-xs sm:text-sm">
 										{file.name}
 									</span>
-									<span className="mt-0.5 truncate text-[11px] text-gray-400">
+									<span className="mt-0.5 truncate text-[10px] text-gray-400 sm:text-[11px]">
 										{ext} {formatFileSize(file.size)}
 										{isFileUploading && ` - ${Math.round(progress * 100)}%`}
 									</span>

@@ -118,7 +118,9 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	if (!ready) {
 		return (
 			<div className="flex h-screen w-screen items-center justify-center">
-				<div className="text-muted-foreground text-sm">{t("loading")}</div>
+				<div className="text-muted-foreground text-xs sm:text-sm">
+					{t("loading")}
+				</div>
 			</div>
 		);
 	}
@@ -151,7 +153,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					{showVncButton && (
 						<button
 							type="button"
-							className="flex w-full items-center justify-center gap-2 border-t bg-primary/5 py-2 text-primary text-sm transition-colors duration-200 hover:bg-primary/10"
+							className="flex w-full items-center justify-center gap-2 border-t bg-primary/5 py-2 text-primary text-xs transition-colors duration-200 hover:bg-primary/10 sm:text-sm"
 							onClick={() => setVncSheetOpen(true)}
 						>
 							<Monitor className="size-4" />

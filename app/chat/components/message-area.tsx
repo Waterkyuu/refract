@@ -43,7 +43,9 @@ const MessageArea = ({
 			<div className="custom-scrollbar flex h-full w-full flex-col overflow-y-auto px-2 py-4">
 				{messages.length === 0 && (
 					<div className="flex flex-1 items-center justify-center">
-						<p className="text-muted-foreground text-sm">{t("sendMessage")}</p>
+						<p className="text-muted-foreground text-xs sm:text-sm">
+							{t("sendMessage")}
+						</p>
 					</div>
 				)}
 

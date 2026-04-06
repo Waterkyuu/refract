@@ -239,7 +239,7 @@ const Sidebar = () => {
 							>
 								<MessageSquarePlus className="mr-2 size-4" />
 								<span>{chat.title}</span>
-								<span className="ml-auto text-muted-foreground text-xs">
+								<span className="ml-auto text-[10px] text-muted-foreground sm:text-xs">
 									{chat.computedDate}
 								</span>
 							</CommandItem>
