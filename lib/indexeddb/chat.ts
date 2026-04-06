@@ -16,6 +16,8 @@ type MessageRow = {
 	createdAt: number;
 };
 
+const MESSAGE_BATCH_PRECISION = 1000;
+
 const db = new Dexie("firewave-agent") as Dexie & {
 	sessions: EntityTable<SessionRow, "id">;
 	messages: EntityTable<MessageRow, "id">;
@@ -51,14 +53,24 @@ const deleteSession = async (id: string) => {
 	});
 };
 
-const saveMessages = async (messages: UIMessage[], sessionId: string) => {
-	const rows: MessageRow[] = messages.map((msg) => ({
+const buildMessageRows = (
+	messages: UIMessage[],
+	sessionId: string,
+	batchTimestamp = Date.now(),
+): MessageRow[] => {
+	const batchBase = batchTimestamp * MESSAGE_BATCH_PRECISION;
+
+	return messages.map((msg, index) => ({
 		id: msg.id,
 		sessionId,
 		role: msg.role,
 		parts: msg.parts,
-		createdAt: Date.now(),
+		createdAt: batchBase + index,
 	}));
+};
+
+const saveMessages = async (messages: UIMessage[], sessionId: string) => {
+	const rows = buildMessageRows(messages, sessionId);
 
 	await db.transaction("rw", [db.messages, db.sessions], async () => {
 		await db.messages.bulkPut(rows);
@@ -87,6 +99,7 @@ export {
 	getSession,
 	updateSessionTitle,
 	deleteSession,
+	buildMessageRows,
 	saveMessages,
 	getMessages,
 };
