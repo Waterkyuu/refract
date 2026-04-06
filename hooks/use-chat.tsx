@@ -17,7 +17,7 @@ type ChatStatus = "submitted" | "streaming" | "ready" | "error";
 type UseChatOptions = {
 	api?: string;
 	sessionId?: string;
-	onFinish?: (message: UIMessage) => void;
+	onFinish?: (messages: UIMessage[]) => void;
 	onError?: (error: Error) => void;
 	initialMessages?: UIMessage[];
 };
@@ -141,16 +141,6 @@ const useAgentChat = (options: UseChatOptions = {}): UseChatReturn => {
 	const messages = chat.messages;
 	const status = chat.status;
 
-	const hydratedRef = useRef(false);
-	useEffect(() => {
-		if (hydratedRef.current || !initialMessages || initialMessages.length === 0)
-			return;
-		if (chat.messages.length > 0) return;
-
-		hydratedRef.current = true;
-		chat.setMessages(initialMessages);
-	}, [initialMessages, chat]);
-
 	useEffect(() => {
 		for (const msg of messages) {
 			if (msg.role !== "assistant") continue;
@@ -186,8 +176,15 @@ const useAgentChat = (options: UseChatOptions = {}): UseChatReturn => {
 	useEffect(() => {
 		if (status === "ready" && messages.length > 0) {
 			reasoningStartTimeRef.current = null;
+			onFinish?.(messages);
 		}
-	}, [status, messages.length]);
+	}, [status, messages.length, onFinish]);
+
+	useEffect(() => {
+		if (status === "error" && chat.error) {
+			onError?.(chat.error);
+		}
+	}, [status, chat.error, onError]);
 
 	const append = useCallback(
 		async (text: string, opts?: { body?: Record<string, unknown> }) => {

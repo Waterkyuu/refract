@@ -37,7 +37,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	const [vncSheetOpen, setVncSheetOpen] = useState(false);
 	const firstInputSentRef = useRef(false);
 	const sessionCreatedRef = useRef(false);
-	const lastSavedLengthRef = useRef(0);
 	const isMobile = useIsMobile();
 	const vncUrl = useAtomValue(vncUrlAtom);
 
@@ -45,12 +44,22 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		params.then((p) => setSessionId(p.id));
 	}, [params]);
 
-	const { data: historyMessages = [] } = useChatHistory(sessionId);
+	const { data: historyMessages = [], isLoading: historyLoading } =
+		useChatHistory(sessionId);
 	const { mutateAsync: createSession } = useCreateSession();
 	const { mutate: saveMessages } = useSaveMessages();
 
-	const initialMessages =
-		historyMessages.length > 0 ? historyMessages : undefined;
+	const hasHistory = historyMessages.length > 0;
+	const initialMessages = hasHistory ? historyMessages : [];
+	const ready = !!sessionId && !historyLoading;
+
+	const onFinish = useCallback(
+		(messages: Parameters<typeof saveMessages>[0]["messages"]) => {
+			if (!sessionId) return;
+			saveMessages({ messages, sessionId });
+		},
+		[saveMessages, sessionId],
+	);
 
 	const {
 		messages,
@@ -65,6 +74,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		api: "/api/chat",
 		sessionId,
 		initialMessages,
+		onFinish,
 	});
 
 	useEffect(() => {
@@ -88,14 +98,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		}
 	}, [sessionId, append, createSession]);
 
-	useEffect(() => {
-		if (messages.length === 0 || !sessionId) return;
-		if (messages.length <= lastSavedLengthRef.current) return;
-
-		lastSavedLengthRef.current = messages.length;
-		saveMessages({ messages, sessionId });
-	}, [messages, sessionId, saveMessages]);
-
 	const handleShowVnc = useCallback(() => {
 		if (isMobile) {
 			setVncSheetOpen(true);
@@ -109,6 +111,14 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	);
 
 	const showVncButton = isMobile && vncUrl && hasToolCalls;
+
+	if (!ready) {
+		return (
+			<div className="flex h-screen w-screen items-center justify-center">
+				<div className="text-muted-foreground text-sm">Loading...</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex h-screen w-screen flex-col">
