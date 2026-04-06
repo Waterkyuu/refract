@@ -1,15 +1,20 @@
+import authMiddleware from "@/middlewares/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export async function middleware(_request: NextRequest) {
+const middlewares = [authMiddleware];
+
+export async function middleware(request: NextRequest) {
+	for (const mw of middlewares) {
+		const response = await mw(request);
+		if (response && response !== NextResponse.next()) {
+			return response;
+		}
+	}
+
 	return NextResponse.next();
 }
 
 export const config = {
-	matcher: [
-		"/settings/:path*",
-		"/mycreations/:path*",
-		"/myfavourite/:path*",
-		"/morecredits/:path*",
-	],
+	matcher: ["/settings/:path*", "/chat/:path*", "/api/:path*"],
 };

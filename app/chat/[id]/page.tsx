@@ -129,15 +129,15 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		<div className="flex h-screen w-screen flex-col">
 			<Header />
 			{isMobile ? (
-				<div className="flex flex-1 flex-col overflow-hidden">
+				<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
 					<MessageArea
 						messages={messages}
 						thinkingTime={thinkingTime}
-						className="flex-1"
+						className="min-h-0 flex-1"
 						onShowVnc={handleShowVnc}
 					/>
 					<DebugPanel />
-					<div className="flex w-full items-center justify-center border-t px-4 py-2">
+					<div className="flex w-full shrink-0 items-center justify-center border-t px-4 py-2">
 						<InputField
 							input={input}
 							setInput={setInput}
@@ -176,10 +176,14 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					className="flex flex-1 overflow-hidden"
 				>
 					<ResizablePanel defaultSize="30%" maxSize="50%" minSize="30%">
-						<div className="flex h-full w-full flex-col">
-							<MessageArea messages={messages} thinkingTime={thinkingTime} />
+						<div className="flex h-full min-h-0 w-full flex-col">
+							<MessageArea
+								messages={messages}
+								thinkingTime={thinkingTime}
+								className="min-h-0 flex-1"
+							/>
 							<DebugPanel />
-							<div className="flex w-full items-center justify-center px-4 py-2">
+							<div className="flex w-full shrink-0 items-center justify-center px-4 py-2">
 								<InputField
 									input={input}
 									setInput={setInput}

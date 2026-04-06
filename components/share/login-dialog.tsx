@@ -48,10 +48,12 @@ const LoginDialog = ({
 	open,
 	onOpenChange,
 	loginText,
+	showTrigger = true,
 }: {
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	loginText?: string;
+	showTrigger?: boolean;
 }) => {
 	const t = useTranslations("login");
 	const [isLoading, setIsLoading] = useState(false);
@@ -142,11 +144,13 @@ const LoginDialog = ({
 				onOpenChange?.(isOpen);
 			}}
 		>
-			<DialogTrigger asChild>
-				<Button className="cursor-pointer rounded-full">
-					{loginText ?? t("startBuilding")}
-				</Button>
-			</DialogTrigger>
+			{showTrigger && (
+				<DialogTrigger asChild>
+					<Button className="cursor-pointer rounded-full">
+						{loginText ?? t("startBuilding")}
+					</Button>
+				</DialogTrigger>
+			)}
 			<DialogContent
 				className="rounded-xl sm:max-w-[400px]"
 				// showCloseButton={false} // Hide default close button

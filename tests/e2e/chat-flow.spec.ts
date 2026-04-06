@@ -68,7 +68,7 @@ test.describe("Chat History Persistence", () => {
 
 		const hasSession = await page.evaluate(() => {
 			return new Promise<boolean>((resolve) => {
-				const request = indexedDB.open("firewave-agent");
+				const request = indexedDB.open("firewave-agent-v2");
 				request.onsuccess = () => {
 					const db = request.result;
 					const tx = db.transaction("sessions", "readonly");
@@ -98,7 +98,7 @@ test.describe("Chat History Persistence", () => {
 
 		const title = await page.evaluate(() => {
 			return new Promise<string | null>((resolve) => {
-				const request = indexedDB.open("firewave-agent");
+				const request = indexedDB.open("firewave-agent-v2");
 				request.onsuccess = () => {
 					const db = request.result;
 					const tx = db.transaction("sessions", "readonly");
@@ -147,7 +147,7 @@ test.describe("Chat History Persistence", () => {
 
 		const messageCount = await page.evaluate(() => {
 			return new Promise<number>((resolve) => {
-				const request = indexedDB.open("firewave-agent");
+				const request = indexedDB.open("firewave-agent-v2");
 				request.onsuccess = () => {
 					const db = request.result;
 					const tx = db.transaction("messages", "readonly");

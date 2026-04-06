@@ -1,4 +1,9 @@
-import { extractToolEventsFromMessages } from "@/hooks/use-chat";
+import jotaiStore from "@/atoms";
+import loginDialogAtom from "@/atoms/login-dialog";
+import {
+	createAuthAwareChatFetch,
+	extractToolEventsFromMessages,
+} from "@/hooks/use-chat";
 
 type SimplePart = {
 	type: string;
@@ -154,6 +159,32 @@ describe("extractToolEventsFromMessages", () => {
 			new Map(),
 		);
 		expect(events).toEqual([]);
+	});
+});
+
+describe("createAuthAwareChatFetch", () => {
+	beforeEach(() => {
+		jotaiStore.set(loginDialogAtom, false);
+	});
+
+	it("opens the login dialog when chat requests return 401", async () => {
+		const authAwareFetch = createAuthAwareChatFetch(async () => {
+			return { status: 401 } as Response;
+		});
+
+		await authAwareFetch("/api/chat");
+
+		expect(jotaiStore.get(loginDialogAtom)).toBe(true);
+	});
+
+	it("keeps the login dialog closed for non-401 responses", async () => {
+		const authAwareFetch = createAuthAwareChatFetch(async () => {
+			return { status: 200 } as Response;
+		});
+
+		await authAwareFetch("/api/chat");
+
+		expect(jotaiStore.get(loginDialogAtom)).toBe(false);
 	});
 });
 

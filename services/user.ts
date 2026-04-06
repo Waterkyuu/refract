@@ -1,99 +1,49 @@
-import jotaiStore, { logoutAtom, userAtom } from "@/atoms";
-import { handleError } from "@/lib/error-handler";
-import { client } from "@/lib/neon-auth";
-import type { User } from "@/types";
+import jotaiStore, { logoutAtom } from "@/atoms";
+import { authClient } from "@/lib/auth/client";
 
-type provider = "google" | "github" | "vercel";
-
-const getUserInfo = async () => {
-	const { data, error } = await client.auth.getSession();
-	if (error) {
-		handleError(error, "Failed to get user info");
-	}
-
-	if (data?.session) {
-		localStorage.setItem("token", data?.session.token);
-	}
-
-	if (data?.user) {
-		const { id, name, email, image, createdAt, updatedAt, banned } = data.user;
-
-		const user: User = {
-			id: id,
-			userName: name,
-			email: email,
-			avatar: image || null,
-			createdAt: createdAt.toISOString(),
-			updatedAt: updatedAt.toISOString(),
-			banned: banned,
-		};
-
-		jotaiStore.set(userAtom, user);
-	} else {
-		console.error("No active session");
-	}
-};
+type Provider = "google" | "github" | "vercel";
 
 const sendSignInOtp = async (email: string) => {
-	const { error } = await client.auth.emailOtp.sendVerificationOtp({
-		email: email,
+	const { error } = await authClient.emailOtp.sendVerificationOtp({
+		email,
 		type: "sign-in",
 	});
-	if (error) {
-		handleError(error);
-	}
+	if (error) throw error;
 };
 
 const signInWithOtp = async (email: string, otpCode: string) => {
-	const { data, error } = await client.auth.signIn.emailOtp({
-		email: email,
+	const { error } = await authClient.signIn.emailOtp({
+		email,
 		otp: otpCode,
 	});
-
-	if (error) {
-		handleError(error, "Login faild");
-	}
-
-	console.log("Successfully login:", data);
+	if (error) throw error;
 };
 
-const handleOauthSignIn = async (provider: provider) => {
-	const callbackURL = process.env.DEV ? "http://localhost:3000" : "";
-
-	try {
-		await client.auth.signIn.social({
-			provider: provider,
-			callbackURL: callbackURL || window.location.origin,
-		});
-	} catch (error) {
-		handleError(error);
-	}
+const handleOAuthSignIn = async (provider: Provider) => {
+	await authClient.signIn.social({
+		provider,
+		callbackURL: window.location.origin,
+	});
 };
 
 const signInGoogle = async () => {
-	await handleOauthSignIn("google");
+	await handleOAuthSignIn("google");
 };
 
 const signInGithub = async () => {
-	await handleOauthSignIn("github");
+	await handleOAuthSignIn("github");
 };
 
 const signInVercel = async () => {
-	await handleOauthSignIn("vercel");
+	await handleOAuthSignIn("vercel");
 };
 
 const signOut = async () => {
-	try {
-		await client.auth.signOut();
-		jotaiStore.set(logoutAtom);
-		localStorage.removeItem("token");
-	} catch (error) {
-		handleError(error);
-	}
+	await authClient.signOut();
+	jotaiStore.set(logoutAtom);
 };
 
 export {
-	getUserInfo,
 	signOut,
 	signInGithub,
 	sendSignInOtp,

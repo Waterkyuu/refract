@@ -35,6 +35,14 @@ const Header = () => {
 	return (
 		<>
 			<Sidebar />
+			{!user?.id && (
+				<LoginDialog
+					open={isLoginDialogOpen}
+					onOpenChange={setIsLoginDialogOpen}
+					loginText={t("login")}
+					showTrigger={false}
+				/>
+			)}
 			<div className="relative flex w-full items-center justify-between border-b px-3 py-3 md:px-4">
 				{/* Sidebar toggle button */}
 				<Button
@@ -60,11 +68,12 @@ const Header = () => {
 					) : user?.id ? (
 						<Avatar />
 					) : (
-						<LoginDialog
-							open={isLoginDialogOpen}
-							onOpenChange={setIsLoginDialogOpen}
-							loginText={t("login")}
-						/>
+						<Button
+							className="cursor-pointer rounded-full"
+							onClick={() => setIsLoginDialogOpen(true)}
+						>
+							{t("login")}
+						</Button>
 					)}
 				</div>
 			</div>
@@ -122,11 +131,12 @@ const Header = () => {
 							<Avatar />
 						) : (
 							<div className="flex items-center justify-center p-4">
-								<LoginDialog
-									open={isLoginDialogOpen}
-									onOpenChange={setIsLoginDialogOpen}
-									loginText={t("login")}
-								/>
+								<Button
+									className="cursor-pointer rounded-full"
+									onClick={() => setIsLoginDialogOpen(true)}
+								>
+									{t("login")}
+								</Button>
 							</div>
 						)}
 					</div>
