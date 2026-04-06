@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const authMiddleware = async (request: NextRequest) => {
+	if (request.nextUrl.pathname.startsWith("/api/auth")) {
+		return NextResponse.next();
+	}
+
 	const { data: session } = await auth.getSession();
 
 	if (

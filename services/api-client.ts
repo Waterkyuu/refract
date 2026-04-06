@@ -11,7 +11,7 @@ import { toast } from "sonner";
 const baseURL =
 	process.env.NODE_ENV === "development"
 		? "http://localhost:3000/api/v1"
-		: "https://agent-dashboard/api/v1";
+		: "https://fire-wave/api/";
 
 const apiClient = axios.create({
 	baseURL: baseURL,
