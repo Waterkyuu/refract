@@ -202,7 +202,9 @@ const navigateBrowser = async (
 ): Promise<{ url: string; title: string }> => {
 	const sb = getDesktopSandbox(sandboxId);
 	if (!sb)
-		throw new Error("No desktop sandbox available. Create a sandbox first.");
+		throw new Error(
+			"No desktop sandbox available. You MUST call createDesktopSandbox first.",
+		);
 
 	await sb.open(url);
 	await sb.wait(3000);
@@ -219,17 +221,10 @@ const searchWeb = async (
 }> => {
 	const sb = getDesktopSandbox(sandboxId);
 
-	if (!sb) {
-		return {
-			query,
-			results: [
-				{
-					title: `No sandbox available for search: ${query}`,
-					snippet: "Create a desktop sandbox first to enable web search.",
-				},
-			],
-		};
-	}
+	if (!sb)
+		throw new Error(
+			"No desktop sandbox available. You MUST call createDesktopSandbox first.",
+		);
 
 	await sb.launch(
 		"google-chrome",

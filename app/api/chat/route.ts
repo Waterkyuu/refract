@@ -78,7 +78,7 @@ const codeInterpreterTool = tool({
 
 const shellTool = tool({
 	description:
-		"Execute a shell command in the desktop sandbox. Use for running scripts, installing packages, or any terminal operations. Requires a desktop sandbox to exist first.",
+		"Execute a shell command in the desktop sandbox. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
 	inputSchema: zodSchema(
 		z.object({
 			command: z.string().describe("Shell command to execute in the sandbox"),
@@ -106,7 +106,7 @@ const shellTool = tool({
 
 const navigateBrowserTool = tool({
 	description:
-		"Open a URL in the desktop sandbox browser. Requires a desktop sandbox to exist first.",
+		"Open a URL in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
 	inputSchema: zodSchema(
 		z.object({
 			url: z.string().describe("URL to navigate to"),
@@ -132,7 +132,7 @@ const navigateBrowserTool = tool({
 
 const searchWebTool = tool({
 	description:
-		"Search the web by opening Google in the desktop sandbox browser. If no desktop sandbox exists, returns a message asking to create one first.",
+		"Search the web by opening Google in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
 	inputSchema: zodSchema(
 		z.object({
 			query: z.string().describe("Search query"),
@@ -161,11 +161,11 @@ const SYSTEM_PROMPT = `You are an autonomous AI agent that helps users accomplis
 1. **Desktop Sandbox** (Ubuntu desktop + browser + VNC) — for browser automation, visual tasks, web browsing
 2. **Code Interpreter** (Jupyter notebook) — for Python execution, data analysis, calculations, chart generation
 
-When a user asks you to do something:
-- For computation/data tasks: use codeInterpreter directly
-- For browser/web tasks: first createSandbox, then use navigateBrowser and shell
-- Break complex tasks into steps and use the appropriate tool for each step
-- Report your progress to the user
+IMPORTANT RULES:
+- Before using navigateBrowser, searchWeb, or executeShell, you MUST call createSandbox first to set up a desktop sandbox.
+- For Python/code tasks, use codeInterpreter directly — it auto-creates a Jupyter sandbox if needed.
+- Break complex tasks into steps and use the appropriate tool for each step.
+- Report your progress to the user.
 
 Always explain what you're doing and why. Be thorough and careful.`;
 
