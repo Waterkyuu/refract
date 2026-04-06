@@ -24,16 +24,21 @@ import { cn } from "@/lib/utils";
 import { sendSignInOtp, signInWithOtp } from "@/services/user";
 import { LoginInputSchema } from "@/types";
 import { AlertCircleIcon, ArrowLeft, ArrowRightIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import OauthGroup from "./oauth-group";
 
 // OR separator
 const OrSeparator = () => {
+	const t = useTranslations("login");
+
 	return (
 		<div className="flex w-full items-center justify-between">
 			<div className="h-0 w-1/4 border border-gray-300" />
-			<span className="text-gray-600 text-xs sm:text-sm">OR continue with</span>
+			<span className="text-gray-600 text-xs sm:text-sm">
+				{t("orContinueWith")}
+			</span>
 			<div className="h-0 w-1/4 border border-gray-300" />
 		</div>
 	);
@@ -42,25 +47,26 @@ const OrSeparator = () => {
 const LoginDialog = ({
 	open,
 	onOpenChange,
+	loginText,
 }: {
-	/** Controlled open state */
 	open?: boolean;
-	/** Callback when open state changes */
 	onOpenChange?: (open: boolean) => void;
+	loginText?: string;
 }) => {
-	const [isLoading, setIsLoading] = useState(false); // Whether loading
-	const [error, setError] = useState<string | string[]>(""); // Error message
+	const t = useTranslations("login");
+	const [isLoading, setIsLoading] = useState(false);
+	const [error, setError] = useState<string | string[]>("");
 
 	const [email, setEmail] = useState("");
 
-	const [isSwitchEmail, setIsSwitchEmail] = useState(true); // Whether to use email for verification
-	const [isOTP, setIsOTP] = useState(false); // Whether entering verification code
+	const [isSwitchEmail, setIsSwitchEmail] = useState(true);
+	const [isOTP, setIsOTP] = useState(false);
 
 	const [otp, setOtp] = useState("");
 
 	const handleEmailLogin = async () => {
 		if (!email) {
-			setError("Email cannot be empty");
+			setError(t("emailEmpty"));
 			return;
 		}
 
@@ -76,7 +82,7 @@ const LoginDialog = ({
 			if (result.success) {
 				await sendSignInOtp(email);
 
-				toast.success("Verification code has been sent to" + email);
+				toast.success(t("otpSent", { email }));
 
 				setIsOTP(true);
 			} else {
@@ -103,7 +109,7 @@ const LoginDialog = ({
 				setIsLoading(true);
 				try {
 					await signInWithOtp(email, otp);
-					toast.success("Login successful");
+					toast.success(t("loginSuccess"));
 
 					// Reload the page after successful login
 					window.location.reload();
@@ -137,7 +143,9 @@ const LoginDialog = ({
 			}}
 		>
 			<DialogTrigger asChild>
-				<Button className="cursor-pointer rounded-full">Login</Button>
+				<Button className="cursor-pointer rounded-full">
+					{loginText ?? t("startBuilding")}
+				</Button>
 			</DialogTrigger>
 			<DialogContent
 				className="rounded-xl sm:max-w-[400px]"
@@ -156,10 +164,10 @@ const LoginDialog = ({
 				</DialogClose> */}
 				<DialogHeader>
 					<DialogTitle className="text-xl md:text-2xl ">
-						Start Building
+						{t("startBuilding")}
 					</DialogTitle>
 					<DialogDescription className="text-base md:text-lg">
-						Sign in to continue your magic journey
+						{t("description")}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -191,7 +199,7 @@ const LoginDialog = ({
 							onClick={() => setIsOTP(false)}
 						>
 							<ArrowLeft className="size-4" />
-							<span className="text-xs sm:text-sm">Go back</span>
+							<span className="text-xs sm:text-sm">{t("goBack")}</span>
 						</div>
 					</div>
 				) : (
@@ -205,19 +213,19 @@ const LoginDialog = ({
 									variant="default"
 									className="cussor-pointer relative p-2"
 								>
-									Sign in with email
+									{t("signInWithEmail")}
 								</Button>
 							</>
 						) : (
 							<>
 								<div className="flex flex-col gap-3">
-									<Label htmlFor="email">Email</Label>
+									<Label htmlFor="email">{t("emailLabel")}</Label>
 									<Input
 										id="email"
 										name="email"
 										type="email"
 										value={email}
-										placeholder="Enter your email address"
+										placeholder={t("emailPlaceholder")}
 										onChange={(e) => setEmail(e.target.value)}
 									/>
 									{error && (
@@ -232,7 +240,7 @@ const LoginDialog = ({
 											<Spinner className="size-4" />
 										) : (
 											<>
-												Next
+												{t("next")}
 												<ArrowRightIcon className="size-4" />
 											</>
 										)}

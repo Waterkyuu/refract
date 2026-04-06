@@ -28,6 +28,7 @@ import {
 	PanelRightDashed,
 	Search,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -46,6 +47,7 @@ const Sidebar = () => {
 	const [isOpen, setIsOpen] = useAtom(sidebarOpenAtom);
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const t = useTranslations("sidebar");
 
 	const { data: sessions = [] } = useAllSessions();
 
@@ -111,7 +113,7 @@ const Sidebar = () => {
 				<div className="flex h-full flex-col">
 					<div className="flex items-center justify-between border-b px-4 py-4">
 						<Link href="/" className="font-lora text-xl" onClick={closeSidebar}>
-							Fire Wave
+							{t("brand")}
 						</Link>
 						<Button
 							variant="ghost"
@@ -131,7 +133,7 @@ const Sidebar = () => {
 							onClick={handleNewChat}
 						>
 							<MessageSquarePlus className="size-4" />
-							<span>New Chat</span>
+							<span>{t("newChat")}</span>
 						</Button>
 					</div>
 
@@ -142,7 +144,7 @@ const Sidebar = () => {
 							onClick={() => setIsSearchOpen(true)}
 						>
 							<Search className="size-4" />
-							<span>Search chats...</span>
+							<span>{t("searchChats")}</span>
 							<span className="ml-auto text-xs">Ctrl+K</span>
 						</Button>
 					</div>
@@ -214,17 +216,17 @@ const Sidebar = () => {
 			<CommandDialog
 				open={isSearchOpen}
 				onOpenChange={setIsSearchOpen}
-				title="Search chats"
-				description="Search through your chat history"
+				title={t("searchChatsTitle")}
+				description={t("searchChatsDescription")}
 			>
 				<CommandInput
-					placeholder="Search chats..."
+					placeholder={t("searchChats")}
 					value={searchQuery}
 					onValueChange={setSearchQuery}
 				/>
 				<CommandList>
-					<CommandEmpty>No chats found.</CommandEmpty>
-					<CommandGroup heading="Chat History">
+					<CommandEmpty>{t("noChatsFound")}</CommandEmpty>
+					<CommandGroup heading={t("chatHistory")}>
 						{filteredChats.map((chat) => (
 							<CommandItem
 								key={chat.id}

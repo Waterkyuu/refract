@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUpdateSessionTitle } from "@/services/chat";
 import { Pencil } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
@@ -25,12 +26,13 @@ type RenameDialogProps = {
 const RenameDialog = ({ sessionId, title }: RenameDialogProps) => {
 	const [open, setOpen] = useState(false);
 	const [newTitle, setNewTitle] = useState(title ?? "");
+	const t = useTranslations("renameChat");
 
 	const { mutate: updateTitle, isPending } = useUpdateSessionTitle();
 
 	const handleRename = useCallback(() => {
 		if (!newTitle.trim()) {
-			toast.error("Title cannot be empty");
+			toast.error(t("titleEmpty"));
 			return;
 		}
 
@@ -43,15 +45,15 @@ const RenameDialog = ({ sessionId, title }: RenameDialogProps) => {
 			{ sessionId, title: newTitle.trim() },
 			{
 				onSuccess: () => {
-					toast.success("Title updated successfully");
+					toast.success(t("success"));
 					setOpen(false);
 				},
 				onError: () => {
-					toast.error("Failed to update title");
+					toast.error(t("failed"));
 				},
 			},
 		);
-	}, [sessionId, newTitle, title, updateTitle]);
+	}, [sessionId, newTitle, title, updateTitle, t]);
 
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
@@ -67,19 +69,17 @@ const RenameDialog = ({ sessionId, title }: RenameDialogProps) => {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger className="flex w-full items-center gap-2">
 				<Pencil className="size-4" />
-				Rename
+				{t("trigger")}
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Edit chat name</DialogTitle>
-					<DialogDescription>
-						Give this chat a more descriptive name
-					</DialogDescription>
+					<DialogTitle>{t("title")}</DialogTitle>
+					<DialogDescription>{t("description")}</DialogDescription>
 				</DialogHeader>
 				<div className="flex items-center gap-2">
 					<div className="grid flex-1 gap-2">
 						<Label htmlFor="chat-title" className="sr-only">
-							Chat Name
+							{t("chatName")}
 						</Label>
 						<Input
 							id="chat-title"
@@ -96,10 +96,10 @@ const RenameDialog = ({ sessionId, title }: RenameDialogProps) => {
 						onClick={() => setOpen(false)}
 						disabled={isPending}
 					>
-						Cancel
+						{t("cancel")}
 					</Button>
 					<Button onClick={handleRename} disabled={isPending}>
-						{isPending ? "Saving..." : "Save"}
+						{isPending ? t("saving") : t("save")}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
