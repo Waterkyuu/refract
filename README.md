@@ -69,8 +69,8 @@ E2B_API_KEY=your_e2b_api_key
 GLM_MODLE=glm-4-flash
 
 # Neon Auth (Required for authentication)
-PUBLIC_NEON_AUTH_URL=your_neon_auth_url
-NEON_DATA_PUBLIC_API_URL=your_neon_api_url
+NEON_AUTH_BASE_URL=your_neon_auth_url
+NEON_AUTH_COOKIE_SECRET=your_cookie_secret
 
 # Cloudflare R2 (Required for file upload)
 CLOUDFLARE_ACCOUNT_ID=your_account_id
