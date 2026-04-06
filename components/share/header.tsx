@@ -1,90 +1,134 @@
 "use client";
 
-import { useAtomValue } from "jotai";
-import { History, Menu, Plus, UserRound } from "lucide-react";
-
-import { isLoginAtom } from "@/atoms";
+import loginDialogAtom from "@/atoms/login-dialog";
+import { sidebarOpenAtom } from "@/atoms/sidebar";
+import { userAtom } from "@/atoms/user";
+import Avatar from "@/components/share/avatar";
+import LoginDialog from "@/components/share/login-dialog";
+import Sidebar from "@/components/share/sidebar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useAtom } from "jotai";
+import { MenuIcon, PanelLeftDashed, XIcon } from "lucide-react";
+import Link from "next/link";
+import { memo, useCallback, useState } from "react";
 
-type HeaderProps = {
-	onHistoryClick: () => void;
-	onNewChatClick: () => void;
-	className?: string;
-};
+const Header = () => {
+	const isMobile = useIsMobile();
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
+	const [_, setSidebarOpen] = useAtom(sidebarOpenAtom);
 
-const Header = ({ onHistoryClick, onNewChatClick, className }: HeaderProps) => {
-	const isLoggedIn = useAtomValue(isLoginAtom);
+	const toggleMenu = () => {
+		setIsMenuOpen(!isMenuOpen);
+	};
 
-	const actionItems = [
-		{
-			label: "History",
-			icon: History,
-			onClick: onHistoryClick,
-			className: "hidden md:inline-flex xl:hidden",
-		},
-		{
-			label: "Menu",
-			icon: Menu,
-			onClick: onHistoryClick,
-			className: "md:hidden",
-		},
-		{
-			label: "New task",
-			icon: Plus,
-			onClick: onNewChatClick,
-			className: "",
-		},
-	];
+	const openSidebar = useCallback(() => {
+		setSidebarOpen(true);
+	}, [setSidebarOpen]);
+
+	const [user] = useAtom(userAtom);
+	const [isLoginDialogOpen, setIsLoginDialogOpen] = useAtom(loginDialogAtom);
 
 	return (
-		<header
-			className={cn(
-				"fixed inset-x-0 top-0 z-40 border-white/40 border-b bg-white/85 backdrop-blur-xl",
-				className,
-			)}
-		>
-			<div className="mx-auto flex h-18 max-w-[1600px] items-center justify-between gap-4 px-4 md:px-6">
-				<div className="flex items-center gap-2">
-					{actionItems.map(
-						({ label, icon: Icon, onClick, className: itemClass }) => (
-							<Button
-								key={label}
-								className={cn("transition-colors duration-200", itemClass)}
-								onClick={onClick}
-								size="sm"
-								variant="outline"
-							>
-								<Icon className="size-4" />
-								<span className="hidden sm:inline">{label}</span>
-							</Button>
-						),
-					)}
-				</div>
-
-				<div className="ml-auto flex items-center gap-3">
-					<div className="text-right">
-						<p className="font-lora text-lg text-slate-900 uppercase tracking-[0.24em]">
-							Operator Desk
-						</p>
-						<p className="text-slate-500 text-xs">
-							Autonomous browser agent workspace
-						</p>
-					</div>
-
-					{isLoggedIn ? (
-						<div className="flex size-10 items-center justify-center rounded-full border border-slate-200 bg-slate-950 text-white">
-							<UserRound className="size-4" />
-						</div>
-					) : (
-						<Button className="transition-colors duration-200" size="sm">
-							Login
+		<>
+			<Sidebar />
+			<div className="relative flex w-full items-center justify-between border-b px-3 py-3 md:px-4">
+				{/* Sidebar toggle button */}
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					className="p-1"
+					onClick={openSidebar}
+					aria-label="Open sidebar"
+				>
+					<PanelLeftDashed className="size-5" />
+				</Button>
+				<div className="flex items-center gap-2 md:gap-4">
+					{isMobile ? (
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={toggleMenu}
+							aria-label="Toggle menu"
+						>
+							{/* Must use size, otherwise Button will force default size-4 */}
+							<MenuIcon className="size-6" />
 						</Button>
+					) : user?.id ? (
+						<Avatar />
+					) : (
+						<LoginDialog
+							open={isLoginDialogOpen}
+							onOpenChange={setIsLoginDialogOpen}
+						/>
 					)}
 				</div>
 			</div>
-		</header>
+
+			{/* Mobile menu overlay */}
+			{isMobile && isMenuOpen && (
+				<div className="fixed inset-0 z-50 bg-background">
+					<div className="flex h-full flex-col">
+						{/* Menu header */}
+						<div className="flex items-center justify-between border-b px-4 py-4 md:px-6">
+							<Link
+								href="/"
+								className="font-lora text-xl sm:text-2xl md:text-4xl"
+							>
+								Fire Wave
+							</Link>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={toggleMenu}
+								aria-label="Close menu"
+							>
+								<XIcon className="size-6" />
+							</Button>
+						</div>
+
+						{/* Navigation links */}
+						<div className="flex-1 overflow-auto">
+							<nav className="flex flex-col space-y-4 p-4">
+								<Link
+									href="/"
+									className="py-2 font-medium text-lg"
+									onClick={toggleMenu}
+								>
+									Home
+								</Link>
+								<Link
+									href="/chat/111"
+									className="py-2 font-medium text-lg"
+									onClick={toggleMenu}
+								>
+									Chat
+								</Link>
+								<Link
+									href="/community"
+									className="py-2 font-medium text-lg"
+									onClick={toggleMenu}
+								>
+									Community
+								</Link>
+							</nav>
+						</div>
+
+						{user?.id ? (
+							<Avatar />
+						) : (
+							<div className="flex items-center justify-center p-4">
+								<LoginDialog
+									open={isLoginDialogOpen}
+									onOpenChange={setIsLoginDialogOpen}
+								/>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+		</>
 	);
 };
 
-export { Header };
+export default memo(Header);

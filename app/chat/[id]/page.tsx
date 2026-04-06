@@ -2,6 +2,7 @@
 
 import jotaiStore from "@/atoms";
 import { firstUserInputAtom, vncUrlAtom } from "@/atoms/chat";
+import Header from "@/components/share/header";
 import InputField from "@/components/share/input-field";
 import {
 	ResizableHandle,
@@ -122,6 +123,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 
 	return (
 		<div className="flex h-screen w-screen flex-col">
+			<Header />
 			{isMobile ? (
 				<div className="flex flex-1 flex-col overflow-hidden">
 					<MessageArea
@@ -172,6 +174,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					<ResizablePanel defaultSize="30%" maxSize="50%" minSize="30%">
 						<div className="flex h-full w-full flex-col">
 							<MessageArea messages={messages} thinkingTime={thinkingTime} />
+							<DebugPanel />
 							<div className="flex w-full items-center justify-center px-4 py-2">
 								<InputField
 									input={input}

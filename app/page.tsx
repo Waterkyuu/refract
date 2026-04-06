@@ -1,7 +1,7 @@
 import AmbientGlow from "@/components/home/ambient-glow";
 import Footer from "@/components/home/footer";
-import Header from "@/components/home/header";
 import InputTitle from "@/components/home/input-title";
+import Header from "@/components/share/header";
 import InputField from "@/components/share/input-field";
 
 const HomePage = () => {
