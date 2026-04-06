@@ -1,6 +1,6 @@
 "use client";
 
-import jotaiStore, { userAtom } from "@/atoms";
+import jotaiStore, { logoutAtom, userAtom } from "@/atoms";
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth/client";
 import type { User } from "@/types";
@@ -24,7 +24,10 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
 				updatedAt: new Date(updatedAt).toISOString(),
 			};
 			jotaiStore.set(userAtom, user);
+			return;
 		}
+
+		jotaiStore.set(logoutAtom);
 	}, [session]);
 
 	return (

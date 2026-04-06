@@ -76,3 +76,16 @@ if (typeof globalThis.WritableStream === "undefined") {
 		writable: true,
 	});
 }
+
+if (typeof globalThis.fetch === "undefined") {
+	Object.defineProperty(globalThis, "fetch", {
+		value: jest.fn(async () => ({
+			ok: true,
+			status: 200,
+			headers: new Headers(),
+			json: async () => ({}),
+			text: async () => "",
+		})),
+		writable: true,
+	});
+}
