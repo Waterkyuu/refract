@@ -36,10 +36,10 @@ const ToolEventItem = memo(({ event }: ToolEventItemProps) => {
 			: "...";
 
 	return (
-		<div className="border-b last:border-b-0">
+		<div className="min-w-0 border-b last:border-b-0">
 			<button
 				type="button"
-				className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
+				className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
 				onClick={() => setIsExpanded(!isExpanded)}
 			>
 				{isExpanded ? (
@@ -66,12 +66,12 @@ const ToolEventItem = memo(({ event }: ToolEventItemProps) => {
 				</span>
 			</button>
 			{isExpanded && (
-				<div className="space-y-2 bg-muted/20 px-3 pt-1 pb-3">
+				<div className="min-w-0 space-y-2 bg-muted/20 px-3 pt-1 pb-3">
 					<div>
 						<p className="mb-1 text-[9px] text-muted-foreground uppercase sm:text-[10px]">
 							{t("arguments")}
 						</p>
-						<pre className="overflow-x-auto rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
+						<pre className="w-full max-w-full overflow-x-auto whitespace-pre-wrap break-all rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
 							{JSON.stringify(event.args, null, 2)}
 						</pre>
 					</div>
@@ -80,7 +80,7 @@ const ToolEventItem = memo(({ event }: ToolEventItemProps) => {
 							<p className="mb-1 text-[9px] text-muted-foreground uppercase sm:text-[10px]">
 								{t("result")}
 							</p>
-							<pre className="overflow-x-auto rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
+							<pre className="w-full max-w-full overflow-x-auto whitespace-pre-wrap break-all rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
 								{JSON.stringify(event.result, null, 2)}
 							</pre>
 						</div>
@@ -99,7 +99,7 @@ const DebugPanel = memo(() => {
 	const t = useTranslations("debug");
 
 	return (
-		<div className="border-t">
+		<div className="min-w-0 border-t">
 			<button
 				type="button"
 				className="flex w-full items-center gap-2 px-4 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
@@ -122,7 +122,7 @@ const DebugPanel = memo(() => {
 				)}
 			</button>
 			{isOpen && (
-				<ScrollArea className="max-h-64">
+				<ScrollArea className="max-h-64 min-w-0">
 					{toolEvents.length === 0 ? (
 						<p className="px-4 py-3 text-[10px] text-muted-foreground sm:text-xs">
 							{t("noEvents")}
