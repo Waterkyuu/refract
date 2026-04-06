@@ -58,14 +58,16 @@ const Avatar = ({ mode = "default", className = "" }: AvatarProps) => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				{/* Avatar */}
-				<div className="relative size-6 cursor-pointer rounded-full md:size-8">
+				<button
+					type="button"
+					className="relative size-6 cursor-pointer rounded-full md:size-8"
+				>
 					<img
 						src="https://img.daisyui.com/images/profile/demo/yellingwoman@192.webp"
 						alt="User avatar"
 						className="rounded-full"
 					/>
-				</div>
+				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-56" align="end">
 				<DropdownMenuLabel>{t("myAccount")}</DropdownMenuLabel>

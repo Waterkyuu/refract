@@ -1,3 +1,4 @@
+import { userAtom } from "@/atoms";
 import {
 	type SessionRow,
 	createSession,
@@ -15,11 +16,28 @@ import {
 	useQueryClient,
 } from "@tanstack/react-query";
 import type { UIMessage } from "ai";
+import { useAtomValue } from "jotai";
+
+const useChatStorageUserId = () => {
+	const { id } = useAtomValue(userAtom);
+	return id;
+};
+
+const getRequiredUserId = (userId: string) => {
+	if (!userId) {
+		throw new Error("User is not authenticated");
+	}
+
+	return userId;
+};
 
 const useAllSessions = (): UseQueryResult<SessionRow[], Error> => {
+	const userId = useChatStorageUserId();
+
 	return useQuery({
-		queryKey: ["allSessions"],
-		queryFn: getAllSessions,
+		queryKey: ["allSessions", userId],
+		queryFn: () => getAllSessions(userId),
+		enabled: !!userId,
 		staleTime: 1000,
 	});
 };
@@ -27,10 +45,12 @@ const useAllSessions = (): UseQueryResult<SessionRow[], Error> => {
 const useChatHistory = (
 	sessionId: string,
 ): UseQueryResult<UIMessage[], Error> => {
+	const userId = useChatStorageUserId();
+
 	return useQuery({
-		queryKey: ["chatHistory", sessionId],
-		queryFn: () => getMessages(sessionId),
-		enabled: !!sessionId,
+		queryKey: ["chatHistory", userId, sessionId],
+		queryFn: () => getMessages(sessionId, userId),
+		enabled: !!sessionId && !!userId,
 		staleTime: 1000,
 	});
 };
@@ -40,11 +60,13 @@ const useCreateSession = (): UseMutationResult<
 	Error,
 	{ id: string; title: string }
 > => {
+	const userId = useChatStorageUserId();
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ id, title }) => createSession(id, title),
+		mutationFn: ({ id, title }) =>
+			createSession(id, title, getRequiredUserId(userId)),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+			queryClient.invalidateQueries({ queryKey: ["allSessions", userId] });
 		},
 	});
 };
@@ -54,21 +76,28 @@ const useUpdateSessionTitle = (): UseMutationResult<
 	Error,
 	{ sessionId: string; title: string }
 > => {
+	const userId = useChatStorageUserId();
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ sessionId, title }) => updateSessionTitle(sessionId, title),
+		mutationFn: ({ sessionId, title }) =>
+			updateSessionTitle(sessionId, title, getRequiredUserId(userId)),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+			queryClient.invalidateQueries({ queryKey: ["allSessions", userId] });
 		},
 	});
 };
 
 const useDeleteSession = (): UseMutationResult<void, Error, string> => {
+	const userId = useChatStorageUserId();
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: deleteSession,
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+		mutationFn: (sessionId) =>
+			deleteSession(sessionId, getRequiredUserId(userId)),
+		onSuccess: (_data, sessionId) => {
+			queryClient.invalidateQueries({ queryKey: ["allSessions", userId] });
+			queryClient.removeQueries({
+				queryKey: ["chatHistory", userId, sessionId],
+			});
 		},
 	});
 };
@@ -78,14 +107,16 @@ const useSaveMessages = (): UseMutationResult<
 	Error,
 	{ messages: UIMessage[]; sessionId: string }
 > => {
+	const userId = useChatStorageUserId();
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: ({ messages, sessionId }) => saveMessages(messages, sessionId),
+		mutationFn: ({ messages, sessionId }) =>
+			saveMessages(messages, sessionId, getRequiredUserId(userId)),
 		onSuccess: (_data, variables) => {
 			queryClient.invalidateQueries({
-				queryKey: ["chatHistory", variables.sessionId],
+				queryKey: ["chatHistory", userId, variables.sessionId],
 			});
-			queryClient.invalidateQueries({ queryKey: ["allSessions"] });
+			queryClient.invalidateQueries({ queryKey: ["allSessions", userId] });
 		},
 	});
 };
