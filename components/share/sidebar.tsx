@@ -35,8 +35,8 @@ import { memo, useCallback, useEffect, useState } from "react";
 type ChatHistoryItem = {
 	id: string;
 	title: string;
-	updatedAt: Date;
-	createdAt: Date;
+	updatedAt: number;
+	createdAt: number;
 	computedDate: string;
 };
 
@@ -49,7 +49,6 @@ const Sidebar = () => {
 
 	const { data: sessions = [] } = useAllSessions();
 
-	// Handle Ctrl+K shortcut
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -78,21 +77,18 @@ const Sidebar = () => {
 		[router],
 	);
 
-	// Convert sessions to chat history items with relative dates
 	const chatHistory: ChatHistoryItem[] = sessions.map((session) => ({
 		id: session.id,
 		title: session.title,
 		updatedAt: session.updatedAt,
 		createdAt: session.createdAt,
-		computedDate: formatRelativeDate(session.updatedAt),
+		computedDate: formatRelativeDate(new Date(session.updatedAt)),
 	}));
 
-	// Filter chats based on search query
 	const filteredChats = chatHistory.filter((chat) =>
 		chat.title.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
-	// Group chats by date
 	const groupedChats = filteredChats.reduce<Record<string, ChatHistoryItem[]>>(
 		(acc, chat) => {
 			if (!acc[chat.computedDate]) {
@@ -106,7 +102,6 @@ const Sidebar = () => {
 
 	return (
 		<>
-			{/* Sidebar */}
 			<div
 				className={cn(
 					"fixed inset-y-0 left-0 z-40 w-72 transform border-r bg-background transition-transform duration-300 ease-in-out",
@@ -114,7 +109,6 @@ const Sidebar = () => {
 				)}
 			>
 				<div className="flex h-full flex-col">
-					{/* Header with logo and close button */}
 					<div className="flex items-center justify-between border-b px-4 py-4">
 						<Link href="/" className="font-lora text-xl" onClick={closeSidebar}>
 							Fire Wave
@@ -130,7 +124,6 @@ const Sidebar = () => {
 						</Button>
 					</div>
 
-					{/* New Chat button */}
 					<div className="px-3 py-3">
 						<Button
 							variant="outline"
@@ -142,7 +135,6 @@ const Sidebar = () => {
 						</Button>
 					</div>
 
-					{/* Search box */}
 					<div className="px-3 pb-3">
 						<Button
 							variant="outline"
@@ -155,7 +147,6 @@ const Sidebar = () => {
 						</Button>
 					</div>
 
-					{/* Chat history */}
 					<ScrollArea className="flex-1 px-3">
 						<div className="space-y-4 pb-4">
 							{Object.entries(groupedChats).map(([date, chats]) => (
@@ -212,7 +203,6 @@ const Sidebar = () => {
 				</div>
 			</div>
 
-			{/* Overlay */}
 			{isOpen && (
 				<div
 					className="fixed inset-0 z-30 bg-black/50"
@@ -221,7 +211,6 @@ const Sidebar = () => {
 				/>
 			)}
 
-			{/* Search Dialog */}
 			<CommandDialog
 				open={isSearchOpen}
 				onOpenChange={setIsSearchOpen}

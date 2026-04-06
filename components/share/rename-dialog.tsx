@@ -71,18 +71,18 @@ const RenameDialog = ({ sessionId, title }: RenameDialogProps) => {
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Edit project name</DialogTitle>
+					<DialogTitle>Edit chat name</DialogTitle>
 					<DialogDescription>
-						Give what you think more appropriate
+						Give this chat a more descriptive name
 					</DialogDescription>
 				</DialogHeader>
 				<div className="flex items-center gap-2">
 					<div className="grid flex-1 gap-2">
-						<Label htmlFor="project" className="sr-only">
-							Project Name
+						<Label htmlFor="chat-title" className="sr-only">
+							Chat Name
 						</Label>
 						<Input
-							id="project"
+							id="chat-title"
 							value={newTitle}
 							onChange={(e) => setNewTitle(e.target.value)}
 							onKeyDown={handleKeyDown}

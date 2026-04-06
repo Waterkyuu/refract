@@ -48,7 +48,7 @@ const DeleteChatDialog = ({ sessionId }: DeleteChatDialogProps) => {
 					<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
 					<AlertDialogDescription>
 						This action cannot be undone. This will permanently delete this chat
-						session and remove all messages from our servers.
+						session and all its messages from local storage.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>

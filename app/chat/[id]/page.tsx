@@ -16,6 +16,11 @@ import {
 } from "@/components/ui/sheet";
 import useAgentChat from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+	useChatHistory,
+	useCreateSession,
+	useSaveMessages,
+} from "@/services/chat";
 import { useAtomValue } from "jotai";
 import { Monitor } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -31,12 +36,21 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	const [sessionId, setSessionId] = useState<string>("");
 	const [vncSheetOpen, setVncSheetOpen] = useState(false);
 	const firstInputSentRef = useRef(false);
+	const sessionCreatedRef = useRef(false);
+	const lastSavedLengthRef = useRef(0);
 	const isMobile = useIsMobile();
 	const vncUrl = useAtomValue(vncUrlAtom);
 
 	useEffect(() => {
 		params.then((p) => setSessionId(p.id));
 	}, [params]);
+
+	const { data: historyMessages = [] } = useChatHistory(sessionId);
+	const { mutateAsync: createSession } = useCreateSession();
+	const { mutate: saveMessages } = useSaveMessages();
+
+	const initialMessages =
+		historyMessages.length > 0 ? historyMessages : undefined;
 
 	const {
 		messages,
@@ -50,6 +64,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	} = useAgentChat({
 		api: "/api/chat",
 		sessionId,
+		initialMessages,
 	});
 
 	useEffect(() => {
@@ -60,9 +75,26 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		if (firstInput) {
 			firstInputSentRef.current = true;
 			jotaiStore.set(firstUserInputAtom, "");
+
+			const title =
+				firstInput.length > 50 ? `${firstInput.slice(0, 50)}...` : firstInput;
+
+			if (!sessionCreatedRef.current) {
+				sessionCreatedRef.current = true;
+				createSession({ id: sessionId, title });
+			}
+
 			append(firstInput);
 		}
-	}, [sessionId, append]);
+	}, [sessionId, append, createSession]);
+
+	useEffect(() => {
+		if (messages.length === 0 || !sessionId) return;
+		if (messages.length <= lastSavedLengthRef.current) return;
+
+		lastSavedLengthRef.current = messages.length;
+		saveMessages({ messages, sessionId });
+	}, [messages, sessionId, saveMessages]);
 
 	const handleShowVnc = useCallback(() => {
 		if (isMobile) {
