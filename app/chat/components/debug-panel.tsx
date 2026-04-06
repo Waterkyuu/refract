@@ -2,7 +2,6 @@
 
 import { toolEventsAtom } from "@/atoms/chat";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { ToolCallEvent } from "@/types/chat";
 import { useAtomValue } from "jotai";
@@ -99,7 +98,7 @@ const DebugPanel = memo(() => {
 	const t = useTranslations("debug");
 
 	return (
-		<div className="min-w-0 border-t">
+		<div className="min-w-0 shrink-0 border-t bg-background">
 			<button
 				type="button"
 				className="flex w-full items-center gap-2 px-4 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
@@ -122,7 +121,7 @@ const DebugPanel = memo(() => {
 				)}
 			</button>
 			{isOpen && (
-				<ScrollArea className="max-h-64 min-w-0">
+				<div className="custom-scrollbar max-h-[40vh] min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain">
 					{toolEvents.length === 0 ? (
 						<p className="px-4 py-3 text-[10px] text-muted-foreground sm:text-xs">
 							{t("noEvents")}
@@ -132,7 +131,7 @@ const DebugPanel = memo(() => {
 							<ToolEventItem key={event.id} event={event} />
 						))
 					)}
-				</ScrollArea>
+				</div>
 			)}
 		</div>
 	);
