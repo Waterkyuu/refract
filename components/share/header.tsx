@@ -12,7 +12,7 @@ import { useAtom } from "jotai";
 import { MenuIcon, PanelLeftDashed, XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 
 const Header = () => {
 	const isMobile = useIsMobile();
@@ -20,6 +20,11 @@ const Header = () => {
 	const [_, setSidebarOpen] = useAtom(sidebarOpenAtom);
 	const t = useTranslations("header");
 	const tMobile = useTranslations("mobileMenu");
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	const toggleMenu = () => {
 		setIsMenuOpen(!isMenuOpen);
@@ -31,11 +36,12 @@ const Header = () => {
 
 	const [user] = useAtom(userAtom);
 	const [isLoginDialogOpen, setIsLoginDialogOpen] = useAtom(loginDialogAtom);
+	const isLoggedIn = mounted && user?.id;
 
 	return (
 		<>
 			<Sidebar />
-			{!user?.id && (
+			{!isLoggedIn && (
 				<LoginDialog
 					open={isLoginDialogOpen}
 					onOpenChange={setIsLoginDialogOpen}
@@ -62,10 +68,9 @@ const Header = () => {
 							onClick={toggleMenu}
 							aria-label="Toggle menu"
 						>
-							{/* Must use size, otherwise Button will force default size-4 */}
 							<MenuIcon className="size-6" />
 						</Button>
-					) : user?.id ? (
+					) : isLoggedIn ? (
 						<Avatar />
 					) : (
 						<Button
@@ -127,7 +132,7 @@ const Header = () => {
 							</nav>
 						</div>
 
-						{user?.id ? (
+						{isLoggedIn ? (
 							<Avatar />
 						) : (
 							<div className="flex items-center justify-center p-4">
