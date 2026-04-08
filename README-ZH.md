@@ -23,21 +23,6 @@
 - **会话管理** — 侧边栏按日期分组聊天记录，支持搜索（Ctrl+K）、重命名和删除
 - **响应式设计** — 桌面端分栏布局，移动端底部弹出面板
 
-## 技术栈
-
-| 分类 | 技术 |
-|------|------|
-| 框架 | Next.js 16 (App Router, Turbopack) |
-| 语言 | TypeScript |
-| 样式 | Tailwind CSS v4, Shadcn UI |
-| 状态管理 | Jotai, TanStack React Query |
-| AI | Vercel AI SDK, 智谱 AI (GLM-4-flash) |
-| 沙盒 | E2B Desktop, E2B Code Interpreter |
-| 认证 | Neon Auth (OTP + OAuth) |
-| 存储 | Cloudflare R2 |
-| 测试 | Jest, Playwright |
-| 代码检查 | Biome |
-
 ## 快速开始
 
 ### 环境要求
@@ -75,6 +60,8 @@ NEON_AUTH_COOKIE_SECRET=your_cookie_secret
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 R2_ACCESS_KEY_ID=your_access_key
 R2_SECRET_ACCESS_KEY=your_secret_key
+
+NPM_REGISTRY = "https://registry.npmmirror.com"
 ```
 
 ### 开发

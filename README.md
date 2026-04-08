@@ -32,21 +32,6 @@ Note: that many features are still incomplete; this project is currently just a 
 - **Chat Session Management** — Sidebar with grouped chat history, search (Ctrl+K), rename, and delete
 - **Responsive Design** — Split panel layout on desktop, bottom sheet on mobile
 
-## Tech Stack
-
-| Category | Technology |
-|----------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4, Shadcn UI |
-| State Management | Jotai, TanStack React Query |
-| AI | Vercel AI SDK, Zhipu AI (GLM-4-flash) |
-| Sandbox | E2B Desktop, E2B Code Interpreter |
-| Auth | Neon Auth (OTP + OAuth) |
-| Storage | Cloudflare R2 |
-| Testing | Jest, Playwright |
-| Linting | Biome |
-
 ## Getting Started
 
 ### Prerequisites
@@ -84,6 +69,8 @@ NEON_AUTH_COOKIE_SECRET=your_cookie_secret
 CLOUDFLARE_ACCOUNT_ID=your_account_id
 R2_ACCESS_KEY_ID=your_access_key
 R2_SECRET_ACCESS_KEY=your_secret_key
+
+NPM_REGISTRY = "https://registry.npmmirror.com"
 ```
 
 ### Development
