@@ -6,13 +6,20 @@ services:
       dockerfile: Dockerfile
       args:
         NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmjs.org/}
+        GLM_MODEL: ${GLM_MODEL:-glm-4-flash}
+        E2B_API_KEY: ${E2B_API_KEY:-}
+        NEON_AUTH_BASE_URL: ${NEON_AUTH_BASE_URL:-}
+        NEON_AUTH_COOKIE_SECRET: ${NEON_AUTH_COOKIE_SECRET:-}
+        CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+        R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+        R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
       NODE_ENV: production
       HOSTNAME: 0.0.0.0
       PORT: 3000
-      GLM_MODLE: ${GLM_MODEL:-glm-4-flash}
+      GLM_MODEL: ${GLM_MODEL:-glm-4-flash}
       ZHIPU_API_KEY: ${ZHIPU_API_KEY:-}
       E2B_API_KEY: ${E2B_API_KEY:-}
       NEON_AUTH_BASE_URL: ${NEON_AUTH_BASE_URL:-}
