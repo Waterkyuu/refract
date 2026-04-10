@@ -10,7 +10,7 @@ import {
 	workspaceChartAtom,
 } from "@/atoms/chat";
 import loginDialogAtom from "@/atoms/login-dialog";
-import type { ToolCallEvent } from "@/types/chat";
+import type { ChatMessageMetadata, ToolCallEvent } from "@/types/chat";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -36,7 +36,10 @@ type UseChatReturn = {
 	thinkingTime: number | null;
 	append: (
 		text: string,
-		options?: { body?: Record<string, unknown> },
+		options?: {
+			body?: Record<string, unknown>;
+			metadata?: ChatMessageMetadata;
+		},
 	) => Promise<void>;
 	reload: () => Promise<void>;
 	stop: () => void;
@@ -306,14 +309,23 @@ const useAgentChat = (options: UseChatOptions = {}): UseChatReturn => {
 	}, [status, chat.error, onError]);
 
 	const append = useCallback(
-		async (text: string, opts?: { body?: Record<string, unknown> }) => {
+		async (
+			text: string,
+			opts?: {
+				body?: Record<string, unknown>;
+				metadata?: ChatMessageMetadata;
+			},
+		) => {
 			setThinkingTime(null);
 			reasoningStartTimeRef.current = null;
 			processedToolCallsRef.current.clear();
 			jotaiStore.set(clearToolEventsAtom);
 			jotaiStore.set(agentStatusAtom, "thinking");
 
-			await chat.sendMessage({ text }, { body: opts?.body });
+			await chat.sendMessage(
+				{ metadata: opts?.metadata, text },
+				{ body: opts?.body },
+			);
 		},
 		[chat],
 	);

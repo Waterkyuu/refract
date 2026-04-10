@@ -1,7 +1,9 @@
 "use client";
 
+import FileCard from "@/components/share/file-card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { ChatAttachment, ChatMessageMetadata } from "@/types/chat";
 import type { UIMessage } from "ai";
 import {
 	Bot,
@@ -21,6 +23,7 @@ type MessageItemProps = {
 	message: UIMessage;
 	thinkingTime: number | null;
 	hasToolCalls: boolean;
+	onSelectAttachment?: (attachment: ChatAttachment) => void;
 	onShowVnc?: () => void;
 };
 
@@ -150,10 +153,18 @@ const ToolCallBlock = memo(
 ToolCallBlock.displayName = "ToolCallBlock";
 
 const MessageItem = memo(
-	({ message, thinkingTime, hasToolCalls, onShowVnc }: MessageItemProps) => {
+	({
+		message,
+		thinkingTime,
+		hasToolCalls,
+		onSelectAttachment,
+		onShowVnc,
+	}: MessageItemProps) => {
 		const t = useTranslations("message");
 		const isUser = message.role === "user";
 		const isAssistant = message.role === "assistant";
+		const metadata = message.metadata as ChatMessageMetadata | undefined;
+		const attachments = metadata?.attachments ?? [];
 
 		const textParts = useMemo(
 			() => message.parts.filter((p) => p.type === "text"),
@@ -227,6 +238,27 @@ const MessageItem = memo(
 							</div>
 						);
 					})}
+
+					{isUser && attachments.length > 0 && (
+						<div className="flex flex-wrap justify-end gap-3 pt-1">
+							{attachments.map((attachment) => (
+								<button
+									key={`${message.id}-${attachment.fileId}`}
+									type="button"
+									className="rounded-2xl"
+									onClick={() => onSelectAttachment?.(attachment)}
+								>
+									<FileCard
+										className="w-[15rem] max-w-full"
+										extension={attachment.extension}
+										fileName={attachment.filename}
+										fileSize={attachment.fileSize}
+										isClickable
+									/>
+								</button>
+							))}
+						</div>
+					)}
 
 					{toolParts.map((part, i) => (
 						<ToolCallBlock

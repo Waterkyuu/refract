@@ -3,13 +3,17 @@
 import {
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
+	showFileWorkspaceAtom,
 	showVncWorkspaceAtom,
 	vncUrlAtom,
 	workspaceChartAtom,
 	workspaceDatasetAtom,
+	workspaceFileAtom,
 	workspaceViewAtom,
 } from "@/atoms/chat";
+import FileCard from "@/components/share/file-card";
 import { Button } from "@/components/ui/button";
+import { formatFileSize } from "@/lib/file";
 import { cn } from "@/lib/utils";
 import { useAtomValue, useSetAtom } from "jotai";
 import { BarChart3, FileSpreadsheet, Monitor } from "lucide-react";
@@ -141,20 +145,65 @@ const ChartPanel = memo(() => {
 
 ChartPanel.displayName = "ChartPanel";
 
+const FileInfoPanel = memo(() => {
+	const file = useAtomValue(workspaceFileAtom);
+	const t = useTranslations("chat");
+
+	if (!file) {
+		return (
+			<div className="flex h-full w-full items-center justify-center text-muted-foreground text-sm">
+				{t("workspaceEmpty")}
+			</div>
+		);
+	}
+
+	return (
+		<div className="flex h-full min-h-0 flex-col">
+			<div className="border-b px-4 py-3">
+				<div className="flex items-start justify-between gap-3">
+					<div>
+						<p className="font-medium text-sm">{file.filename}</p>
+						<p className="text-muted-foreground text-xs">
+							{`${file.extension}${file.fileSize ? ` · ${formatFileSize(file.fileSize)}` : ""}`}
+						</p>
+					</div>
+					{file.downloadUrl && (
+						<Button asChild size="sm" variant="outline">
+							<a href={file.downloadUrl}>{t("downloadArtifact")}</a>
+						</Button>
+					)}
+				</div>
+			</div>
+			<div className="flex flex-1 items-start p-4">
+				<FileCard
+					className="w-full max-w-sm"
+					extension={file.extension}
+					fileName={file.filename}
+					fileSize={file.fileSize}
+				/>
+			</div>
+		</div>
+	);
+});
+
+FileInfoPanel.displayName = "FileInfoPanel";
+
 const WorkspacePanel = () => {
 	const t = useTranslations("chat");
 	const activeView = useAtomValue(workspaceViewAtom);
 	const vncUrl = useAtomValue(vncUrlAtom);
 	const chart = useAtomValue(workspaceChartAtom);
 	const dataset = useAtomValue(workspaceDatasetAtom);
+	const file = useAtomValue(workspaceFileAtom);
 	const showVnc = useSetAtom(showVncWorkspaceAtom);
 	const showChart = useSetAtom(showChartWorkspaceAtom);
 	const showDataset = useSetAtom(showDatasetWorkspaceAtom);
+	const showFile = useSetAtom(showFileWorkspaceAtom);
 
 	const availableViews = useMemo(() => {
 		const views: Array<{
 			icon: typeof Monitor;
-			key: "vnc" | "chart" | "dataset";
+			key: "vnc" | "chart" | "dataset" | "file";
 			label: string;
 			onClick: () => void;
 		}> = [];
@@ -183,19 +232,39 @@ const WorkspacePanel = () => {
 				onClick: () => showDataset(dataset),
 			});
 		}
+		if (file) {
+			views.push({
+				key: "file",
+				label: file.filename,
+				icon: FileSpreadsheet,
+				onClick: () => showFile(file),
+			});
+		}
 
 		return views;
-	}, [chart, dataset, showChart, showDataset, showVnc, t, vncUrl]);
+	}, [
+		chart,
+		dataset,
+		file,
+		showChart,
+		showDataset,
+		showFile,
+		showVnc,
+		t,
+		vncUrl,
+	]);
 
 	const effectiveView = useMemo(() => {
+		if (activeView === "file" && file) return "file";
 		if (activeView === "dataset" && dataset) return "dataset";
 		if (activeView === "chart" && chart) return "chart";
 		if (activeView === "vnc" && vncUrl) return "vnc";
 		if (dataset) return "dataset";
+		if (file) return "file";
 		if (chart) return "chart";
 		if (vncUrl) return "vnc";
 		return "empty";
-	}, [activeView, chart, dataset, vncUrl]);
+	}, [activeView, chart, dataset, file, vncUrl]);
 
 	return (
 		<div className="flex h-full w-full flex-col bg-muted/30">
@@ -226,6 +295,7 @@ const WorkspacePanel = () => {
 
 			<div className="min-h-0 flex-1 overflow-hidden">
 				{effectiveView === "dataset" && <DatasetPanel />}
+				{effectiveView === "file" && <FileInfoPanel />}
 				{effectiveView === "chart" && <ChartPanel />}
 				{effectiveView === "vnc" && <VncViewer url={vncUrl} />}
 				{effectiveView === "empty" && (

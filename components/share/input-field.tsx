@@ -3,6 +3,7 @@
 import { firstUserInputAtom, userAtom } from "@/atoms";
 import { pendingHomeUploadsAtom, showDatasetWorkspaceAtom } from "@/atoms/chat";
 import loginDialogAtom from "@/atoms/login-dialog";
+import FileCard from "@/components/share/file-card";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -17,11 +18,11 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { handleError } from "@/lib/error-handler";
-import { formatFileSize } from "@/lib/file";
 import { type UploadResult, cancelUpload, uploadFile } from "@/lib/upload-file";
 import { cn, generateId } from "@/lib/utils";
+import type { ChatAttachment } from "@/types/chat";
 import { useAtom, useSetAtom } from "jotai";
-import { ArrowUp, FileText, Plus, Square, X } from "lucide-react";
+import { ArrowUp, Plus, Square, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { memo, useRef, useState } from "react";
@@ -33,6 +34,7 @@ type AppendFn = (
 		content: string;
 	},
 	options?: {
+		metadata?: Record<string, unknown>;
 		requestBody?: Record<string, unknown>;
 	},
 ) => Promise<void>;
@@ -181,11 +183,6 @@ const InputField = ({
 					});
 				} catch (error) {
 					handleError(error);
-					toast.error(t("uploadFailed"), {
-						description: t("uploadFailedDescription", {
-							fileName: currentFile.name,
-						}),
-					});
 					// Remove from attachments on error
 					setAttachments((prev) => prev.filter((f) => f !== currentFile));
 				} finally {
@@ -197,7 +194,6 @@ const InputField = ({
 				}
 			} catch (error) {
 				handleError(error);
-				console.error("Failed to upload file", error);
 			}
 		}
 
@@ -248,6 +244,23 @@ const InputField = ({
 		onOpenWorkspace?.();
 	};
 
+	const getAttachmentMetadata = (): ChatAttachment[] =>
+		uploadedFiles.map((uploadedFile) => {
+			const localFile = attachments.find(
+				(file) => file.name === uploadedFile.filename,
+			);
+			const extension =
+				uploadedFile.filename.split(".").pop()?.toUpperCase() || "FILE";
+
+			return {
+				extension,
+				fileId: uploadedFile.fileId,
+				filename: uploadedFile.filename,
+				fileSize: localFile?.size,
+				preview: uploadedFile.preview,
+			};
+		});
+
 	const handleSumit = async () => {
 		try {
 			let newInput = "";
@@ -258,13 +271,7 @@ const InputField = ({
 					return;
 				}
 
-				setPendingHomeUploads(
-					uploadedFiles.map((file) => ({
-						fileId: file.fileId,
-						filename: file.filename,
-						preview: file.preview,
-					})),
-				);
+				setPendingHomeUploads(getAttachmentMetadata());
 				const sessionID = generateId();
 				router.push(`/chat/${sessionID}`);
 				return;
@@ -284,6 +291,9 @@ const InputField = ({
 					{
 						requestBody: {
 							fileIds,
+						},
+						metadata: {
+							attachments: getAttachmentMetadata(),
 						},
 					},
 				);
@@ -314,49 +324,26 @@ const InputField = ({
 						);
 						const isPreviewable = Boolean(uploadedFile?.preview);
 						return (
-							<div
-								key={index}
-								className={cn(
-									"group relative flex w-[16rem] items-center gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-2.5 pr-4 text-left transition-colors duration-200",
-									isPreviewable && "hover:border-primary/40 hover:bg-primary/5",
-								)}
-								onClick={() => handlePreviewDataset(file.name)}
-							>
-								{/* File Icon */}
-								<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white">
-									<FileText className="h-5 w-5 text-gray-500" />
-								</div>
-
-								{/* File Info */}
-								<div className="flex flex-col overflow-hidden text-left">
-									<span className="truncate font-medium text-gray-700 text-xs sm:text-sm">
-										{file.name}
-									</span>
-									<span className="mt-0.5 truncate text-[10px] text-gray-400 sm:text-[11px]">
-										{ext} {formatFileSize(file.size)}
-										{isFileUploading && ` - ${Math.round(progress * 100)}%`}
-									</span>
-								</div>
-
-								{/* Upload Progress Indicator */}
-								{isFileUploading && (
-									<div
-										className="absolute bottom-0 left-0 h-0.5 bg-blue-500 transition-all duration-300"
-										style={{ width: `${progress * 100}%` }}
-									/>
-								)}
-
-								{/* Remove Button */}
-								<button
-									type="button"
-									onClick={(event) => {
-										event.stopPropagation();
-										void handleRemoveAttachment(index);
-									}}
-									className="-right-2 -top-2 absolute hidden h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-red-500 group-hover:flex"
-								>
-									<X className="h-3 w-3" />
-								</button>
+							<div key={index} onClick={() => handlePreviewDataset(file.name)}>
+								<FileCard
+									action={
+										<button
+											type="button"
+											onClick={(event) => {
+												event.stopPropagation();
+												void handleRemoveAttachment(index);
+											}}
+											className="-right-2 -top-2 absolute hidden h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition-colors hover:text-red-500 group-hover:flex"
+										>
+											<X className="h-3 w-3" />
+										</button>
+									}
+									extension={ext}
+									fileName={file.name}
+									fileSize={file.size}
+									isClickable={isPreviewable}
+									progress={isFileUploading ? progress : undefined}
+								/>
 							</div>
 						);
 					})}

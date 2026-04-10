@@ -1,16 +1,15 @@
-import type { WorkspaceChart, WorkspaceDataset, WorkspaceView } from "@/types";
-import type { AgentStatus, ToolCallEvent } from "@/types/chat";
+import type {
+	WorkspaceChart,
+	WorkspaceDataset,
+	WorkspaceFile,
+	WorkspaceView,
+} from "@/types";
+import type { AgentStatus, ChatAttachment, ToolCallEvent } from "@/types/chat";
 import { atom } from "jotai";
 
 const firstUserInputAtom = atom<string>("");
 
-const pendingHomeUploadsAtom = atom<
-	Array<{
-		fileId: string;
-		filename: string;
-		preview?: WorkspaceDataset["preview"];
-	}>
->([]);
+const pendingHomeUploadsAtom = atom<ChatAttachment[]>([]);
 
 const vncUrlAtom = atom<string>("");
 
@@ -19,6 +18,8 @@ const workspaceViewAtom = atom<WorkspaceView>("empty");
 const workspaceChartAtom = atom<WorkspaceChart | null>(null);
 
 const workspaceDatasetAtom = atom<WorkspaceDataset | null>(null);
+
+const workspaceFileAtom = atom<WorkspaceFile | null>(null);
 
 const agentStatusAtom = atom<AgentStatus>("idle");
 
@@ -60,6 +61,11 @@ const showDatasetWorkspaceAtom = atom(
 	},
 );
 
+const showFileWorkspaceAtom = atom(null, (_get, set, file: WorkspaceFile) => {
+	set(workspaceFileAtom, file);
+	set(workspaceViewAtom, "file");
+});
+
 export {
 	firstUserInputAtom,
 	pendingHomeUploadsAtom,
@@ -67,6 +73,7 @@ export {
 	workspaceViewAtom,
 	workspaceChartAtom,
 	workspaceDatasetAtom,
+	workspaceFileAtom,
 	agentStatusAtom,
 	toolEventsAtom,
 	dispatchToolEventAtom,
@@ -74,4 +81,5 @@ export {
 	showVncWorkspaceAtom,
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
+	showFileWorkspaceAtom,
 };

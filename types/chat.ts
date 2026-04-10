@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { DatasetPreview } from "./file";
 
 // Agent execution status
 type AgentStatus = "idle" | "thinking" | "acting" | "completed" | "error";
@@ -14,6 +15,18 @@ type ToolCallEvent = {
 	startedAt: number;
 	finishedAt?: number;
 	durationMs?: number;
+};
+
+type ChatAttachment = {
+	extension: string;
+	fileId: string;
+	filename: string;
+	fileSize?: number;
+	preview?: DatasetPreview;
+};
+
+type ChatMessageMetadata = {
+	attachments?: ChatAttachment[];
 };
 
 // Chat session schema (used by sidebar / history management)
@@ -34,6 +47,8 @@ export {
 	SessionItemSchema,
 	SessionsSchema,
 	type AgentStatus,
+	type ChatAttachment,
+	type ChatMessageMetadata,
 	type ToolCallEvent,
 	type SessionItem,
 	type Sessions,

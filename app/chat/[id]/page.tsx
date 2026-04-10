@@ -5,9 +5,11 @@ import {
 	firstUserInputAtom,
 	pendingHomeUploadsAtom,
 	showDatasetWorkspaceAtom,
+	showFileWorkspaceAtom,
 	vncUrlAtom,
 	workspaceChartAtom,
 	workspaceDatasetAtom,
+	workspaceFileAtom,
 } from "@/atoms/chat";
 import Header from "@/components/share/header";
 import InputField from "@/components/share/input-field";
@@ -29,6 +31,7 @@ import {
 	useCreateSession,
 	useSaveMessages,
 } from "@/services/chat";
+import type { ChatAttachment } from "@/types/chat";
 import { useAtomValue } from "jotai";
 import { Monitor } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -50,6 +53,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	const vncUrl = useAtomValue(vncUrlAtom);
 	const workspaceChart = useAtomValue(workspaceChartAtom);
 	const workspaceDataset = useAtomValue(workspaceDatasetAtom);
+	const workspaceFile = useAtomValue(workspaceFileAtom);
 	const t = useTranslations("chat");
 
 	useEffect(() => {
@@ -120,6 +124,9 @@ const ChatPage = ({ params }: ChatPageProps) => {
 				body: {
 					fileIds: pendingHomeUploads.map((file) => file.fileId),
 				},
+				metadata: {
+					attachments: pendingHomeUploads,
+				},
 			});
 		}
 	}, [sessionId, append, createSession]);
@@ -130,6 +137,31 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		}
 	}, [isMobile]);
 
+	const handleSelectAttachment = useCallback(
+		(attachment: ChatAttachment) => {
+			if (attachment.preview) {
+				jotaiStore.set(showDatasetWorkspaceAtom, {
+					fileId: attachment.fileId,
+					filename: attachment.filename,
+					preview: attachment.preview,
+				});
+			} else {
+				jotaiStore.set(showFileWorkspaceAtom, {
+					downloadUrl: `/api/file/${attachment.fileId}/download`,
+					extension: attachment.extension,
+					fileId: attachment.fileId,
+					filename: attachment.filename,
+					fileSize: attachment.fileSize,
+				});
+			}
+
+			if (isMobile) {
+				setVncSheetOpen(true);
+			}
+		},
+		[isMobile],
+	);
+
 	const hasToolCalls = messages.some((msg) =>
 		msg.parts.some(
 			(p) => typeof p.type === "string" && p.type.startsWith("tool-"),
@@ -137,7 +169,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	);
 
 	const hasWorkspaceContent = Boolean(
-		vncUrl || workspaceChart || workspaceDataset,
+		vncUrl || workspaceChart || workspaceDataset || workspaceFile,
 	);
 	const showVncButton =
 		isMobile &&
@@ -164,6 +196,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 						thinkingTime={thinkingTime}
 						isHistoryLoading={isHistoryHydrating}
 						className="min-h-0 flex-1"
+						onSelectAttachment={handleSelectAttachment}
 						onShowVnc={handleShowVnc}
 					/>
 					<DebugPanel />
@@ -173,10 +206,14 @@ const ChatPage = ({ params }: ChatPageProps) => {
 							setInput={setInput}
 							append={async (msg, options) => {
 								const requestOptions = options as
-									| { requestBody?: Record<string, unknown> }
+									| {
+											metadata?: Record<string, unknown>;
+											requestBody?: Record<string, unknown>;
+									  }
 									| undefined;
 								await append(msg.content ?? "", {
 									body: requestOptions?.requestBody,
+									metadata: requestOptions?.metadata,
 								});
 							}}
 							isLoading={isLoading}
@@ -218,6 +255,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 								thinkingTime={thinkingTime}
 								isHistoryLoading={isHistoryHydrating}
 								className="min-h-0 flex-1"
+								onSelectAttachment={handleSelectAttachment}
 							/>
 							<DebugPanel />
 							<div className="flex w-full shrink-0 items-center justify-center px-4 py-2">
@@ -226,10 +264,14 @@ const ChatPage = ({ params }: ChatPageProps) => {
 									setInput={setInput}
 									append={async (msg, options) => {
 										const requestOptions = options as
-											| { requestBody?: Record<string, unknown> }
+											| {
+													metadata?: Record<string, unknown>;
+													requestBody?: Record<string, unknown>;
+											  }
 											| undefined;
 										await append(msg.content ?? "", {
 											body: requestOptions?.requestBody,
+											metadata: requestOptions?.metadata,
 										});
 									}}
 									isLoading={isLoading}

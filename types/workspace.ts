@@ -1,6 +1,6 @@
 import type { DatasetPreview } from "./file";
 
-type WorkspaceView = "empty" | "vnc" | "chart" | "dataset";
+type WorkspaceView = "empty" | "vnc" | "chart" | "dataset" | "file";
 
 type WorkspaceChart = {
 	chart?: Record<string, unknown>;
@@ -19,4 +19,12 @@ type WorkspaceDataset = {
 	preview: DatasetPreview;
 };
 
-export type { WorkspaceChart, WorkspaceDataset, WorkspaceView };
+type WorkspaceFile = {
+	downloadUrl?: string;
+	extension: string;
+	fileId: string;
+	filename: string;
+	fileSize?: number;
+};
+
+export type { WorkspaceChart, WorkspaceDataset, WorkspaceFile, WorkspaceView };

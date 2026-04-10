@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import type { ChatAttachment } from "@/types/chat";
 import type { UIMessage } from "ai";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef } from "react";
@@ -11,6 +12,7 @@ type MessageAreaProps = {
 	messages: UIMessage[];
 	thinkingTime: number | null;
 	className?: string;
+	onSelectAttachment?: (attachment: ChatAttachment) => void;
 	onShowVnc?: () => void;
 	isHistoryLoading?: boolean;
 };
@@ -19,6 +21,7 @@ const MessageArea = ({
 	messages,
 	thinkingTime,
 	className,
+	onSelectAttachment,
 	onShowVnc,
 	isHistoryLoading = false,
 }: MessageAreaProps) => {
@@ -62,6 +65,7 @@ const MessageArea = ({
 							message={message}
 							thinkingTime={message.role === "assistant" ? thinkingTime : null}
 							hasToolCalls={hasToolCalls}
+							onSelectAttachment={onSelectAttachment}
 							onShowVnc={onShowVnc}
 						/>
 					))}
