@@ -1,5 +1,3 @@
-"use client";
-
 import jotaiStore from "@/atoms";
 import {
 	agentStatusAtom,

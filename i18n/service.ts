@@ -1,5 +1,3 @@
-"use server";
-
 import { cookies, headers } from "next/headers";
 import { defaultLocale, locales } from "./routing";
 
