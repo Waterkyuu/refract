@@ -48,4 +48,32 @@ describe("chat indexeddb storage", () => {
 		expect(rows[0]?.createdAt).toBe(batchTimestamp * 1000);
 		expect(rows[1]?.createdAt).toBe(batchTimestamp * 1000 + 1);
 	});
+
+	it("preserves message metadata for persisted attachments", () => {
+		const sessionId = `session-${crypto.randomUUID()}`;
+		const userId = `user-${crypto.randomUUID()}`;
+		const messages: UIMessage[] = [
+			{
+				...makeTextMessage(
+					`message-${crypto.randomUUID()}`,
+					"user",
+					"message with file",
+				),
+				metadata: {
+					attachments: [
+						{
+							extension: "PDF",
+							fileId: "file-1",
+							filename: "report.pdf",
+							fileSize: 1024,
+						},
+					],
+				},
+			},
+		];
+
+		const rows = buildMessageRows(messages, sessionId, userId);
+
+		expect(rows[0]?.metadata).toEqual(messages[0]?.metadata);
+	});
 });

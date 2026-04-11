@@ -15,6 +15,7 @@ type MessageRow = {
 	sessionId: string;
 	role: string;
 	parts: UIMessage["parts"];
+	metadata?: UIMessage["metadata"];
 	createdAt: number;
 };
 
@@ -89,6 +90,7 @@ const buildMessageRows = (
 		sessionId,
 		role: msg.role,
 		parts: msg.parts,
+		metadata: msg.metadata,
 		createdAt: batchBase + index,
 	}));
 };
@@ -124,6 +126,7 @@ const getMessages = async (
 		id: row.id,
 		role: row.role as UIMessage["role"],
 		parts: row.parts,
+		metadata: row.metadata,
 	}));
 };
 
