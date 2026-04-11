@@ -24,8 +24,8 @@ import {
 	SheetHeader,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import useAgentChat from "@/hooks/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
+import usePipelineChat from "@/hooks/use-pipeline-chat";
 import {
 	useChatHistory,
 	useCreateSession,
@@ -77,7 +77,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	);
 
 	const { messages, input, setInput, append, isLoading, stop, thinkingTime } =
-		useAgentChat({
+		usePipelineChat({
 			api: "/api/chat",
 			sessionId,
 			initialMessages,

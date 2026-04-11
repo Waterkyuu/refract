@@ -1,0 +1,38 @@
+import { createDataTools } from "@/lib/agent/tools/data-tools";
+import type { AgentDefinition } from "./types";
+
+const DATA_AGENT_PROMPT = `You are a data engineering specialist. Your job is to:
+1. Read the data files from /home/user/data/
+2. Inspect data structure, types, and quality
+3. Clean the data: handle missing values, outliers, incorrect types, duplicates
+4. Compute summary statistics (count, mean, std, min, max, unique values for each column)
+5. Save the cleaned dataset to /home/user/output/cleaned_data.csv
+
+IMPORTANT RULES:
+- Always use pandas for data manipulation
+- Print summary statistics AFTER cleaning
+- Create the output directory with os.makedirs("/home/user/output", exist_ok=True) before saving
+- Report what cleaning operations you performed in a concise text summary
+- If the data is already clean, just load and summarize it
+- Always finish by printing a JSON block with the summary so the next agent can use it. Format:
+  {
+    "filePath": "/home/user/output/cleaned_data.csv",
+    "summary": "one-paragraph description of the dataset and cleaning done",
+    "stats": "key statistics",
+    "rowCount": <number>,
+    "columns": ["col1", "col2", ...]
+  }`;
+
+type DataAgentOptions = {
+	fileIds?: string[];
+};
+
+const createDataAgent = (opts: DataAgentOptions = {}): AgentDefinition => ({
+	name: "Data Agent",
+	step: "data",
+	systemPrompt: DATA_AGENT_PROMPT,
+	tools: createDataTools({ fileIds: opts.fileIds }),
+	maxSteps: 10,
+});
+
+export { createDataAgent, DATA_AGENT_PROMPT };
