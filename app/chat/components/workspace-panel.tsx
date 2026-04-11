@@ -23,7 +23,7 @@ import ChartPanel from "./chart-panel";
 import DatasetPanel from "./dataset-panel";
 import FileInfoPanel from "./file-info-panel";
 import TypstPreview from "./typst-preview-panel";
-import { VncViewer } from "./vnc-panel";
+import VncPanel from "./vnc-panel";
 
 const WorkspacePanel = () => {
 	const t = useTranslations("chat");
@@ -103,19 +103,26 @@ const WorkspacePanel = () => {
 		vncUrl,
 	]);
 
+	const dataMap = useMemo(
+		() =>
+			[
+				["dataset", dataset],
+				["file", file],
+				["typst", typstContent],
+				["chart", chart],
+				["vnc", vncUrl],
+			] as const,
+		[chart, dataset, file, typstContent, vncUrl],
+	);
+
 	const effectiveView = useMemo(() => {
-		if (activeView === "file" && file) return "file";
-		if (activeView === "typst" && typstContent) return "typst";
-		if (activeView === "dataset" && dataset) return "dataset";
-		if (activeView === "chart" && chart) return "chart";
-		if (activeView === "vnc" && vncUrl) return "vnc";
-		if (dataset) return "dataset";
-		if (file) return "file";
-		if (typstContent) return "typst";
-		if (chart) return "chart";
-		if (vncUrl) return "vnc";
-		return "empty";
-	}, [activeView, chart, dataset, file, typstContent, vncUrl]);
+		const activeMatch = dataMap.find(
+			([key, data]) => key === activeView && data,
+		);
+		if (activeMatch) return activeMatch[0];
+		const fallback = dataMap.find(([, data]) => data);
+		return fallback?.[0] ?? "empty";
+	}, [activeView, dataMap]);
 
 	return (
 		<div className="flex h-full w-full flex-col bg-muted/30">
@@ -151,7 +158,7 @@ const WorkspacePanel = () => {
 				{effectiveView === "typst" && (
 					<TypstPreview content={typstContent} isShowToC={false} />
 				)}
-				{effectiveView === "vnc" && <VncViewer url={vncUrl} />}
+				{effectiveView === "vnc" && <VncPanel />}
 				{effectiveView === "empty" && (
 					<div className="flex h-full w-full items-center justify-center text-muted-foreground text-sm">
 						{t("workspaceEmpty")}
