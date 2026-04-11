@@ -188,9 +188,9 @@ const AssistantMessage = memo(
 						return (
 							<div
 								key={`text-${i}`}
-								className="rounded-2xl bg-muted px-4 py-2.5 text-xs leading-relaxed sm:text-sm"
+								className="flex items-center justify-center rounded-2xl bg-muted px-4 py-2.5 text-xs sm:text-sm"
 							>
-								<p className="whitespace-pre-wrap break-words">
+								<p className="flex items-center justify-center break-words">
 									{textPart.text}
 								</p>
 							</div>
