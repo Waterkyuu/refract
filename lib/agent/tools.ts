@@ -1,3 +1,4 @@
+import { findSkill, getSkills } from "@/lib/agent/skills";
 import {
 	createDesktopSandbox,
 	executeCode,
@@ -262,10 +263,31 @@ const createCodeInterpreterTool = ({
 		},
 	});
 
+const loadSkillTool = tool({
+	description:
+		"Load the full content of a skill into the agent's context. Use this when you need detailed information about how to handle a specific type of request (e.g., creating a paper, resume, or notes with Typst). This will provide you with comprehensive instructions, templates, and guidelines for the skill area.",
+	inputSchema: zodSchema(
+		z.object({
+			skill_name: z.string().describe("The name of the skill to load"),
+		}),
+	),
+	execute: async ({ skill_name }: { skill_name: string }) => {
+		const skill = findSkill(skill_name);
+		if (skill) {
+			return `Loaded skill: ${skill.name}\n\n${skill.content}`;
+		}
+		const available = getSkills()
+			.map((s) => s.name)
+			.join(", ");
+		return `Skill '${skill_name}' not found. Available skills: ${available}`;
+	},
+});
+
 const createChatTools = ({ fileIds = [] }: CreateChatToolsOptions = {}) => ({
 	createSandbox: createSandboxTool,
 	codeInterpreter: createCodeInterpreterTool({ fileIds }),
 	executeShell: executeShellTool,
+	loadSkill: loadSkillTool,
 	navigateBrowser: navigateBrowserTool,
 	persistCodeFile: persistCodeFileTool,
 	persistLatestChart: persistLatestChartTool,
@@ -277,6 +299,7 @@ export {
 	createCodeInterpreterTool,
 	createSandboxTool,
 	executeShellTool,
+	loadSkillTool,
 	navigateBrowserTool,
 	persistCodeFileTool,
 	persistLatestChartTool,
