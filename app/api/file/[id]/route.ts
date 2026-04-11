@@ -1,11 +1,11 @@
 import { getFileRecordStatus } from "@/lib/file-store";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 type FileRouteContext = {
 	params: Promise<{ id: string }>;
 };
 
-const GET = async (_req: Request, { params }: FileRouteContext) => {
+const GET = async (_req: NextRequest, { params }: FileRouteContext) => {
 	try {
 		const { id } = await params;
 		const record = await getFileRecordStatus(id);

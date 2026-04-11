@@ -8,7 +8,7 @@ import {
 	stepCountIs,
 	streamText,
 } from "ai";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { zhipu } from "zhipu-ai-provider";
 
 type ChatRequestBody = {
@@ -32,7 +32,7 @@ const resolveAttachedFiles = async (
 	return attachedFiles.filter((file): file is FileRecord => file !== null);
 };
 
-const POST = async (req: Request) => {
+const POST = async (req: NextRequest) => {
 	try {
 		const body = await req.json();
 		const { fileIds = [], messages: uiMessages }: ChatRequestBody = body;

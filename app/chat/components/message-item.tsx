@@ -1,5 +1,3 @@
-"use client";
-
 import type { ChatAttachment } from "@/types/chat";
 import type { UIMessage } from "ai";
 import { memo } from "react";

@@ -1,7 +1,7 @@
 import { writeChunkFile } from "@/lib/file-store";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-const POST = async (req: Request) => {
+const POST = async (req: NextRequest) => {
 	try {
 		const formData = await req.formData();
 		const chunk = formData.get("chunk");

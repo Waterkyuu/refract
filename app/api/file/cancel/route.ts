@@ -1,12 +1,12 @@
 import { cancelUploadByFilename } from "@/lib/file-store";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const CancelBodySchema = z.object({
 	filename: z.string().min(1),
 });
 
-const POST = async (req: Request) => {
+const POST = async (req: NextRequest) => {
 	try {
 		const body = CancelBodySchema.parse(await req.json());
 		await cancelUploadByFilename(body.filename);

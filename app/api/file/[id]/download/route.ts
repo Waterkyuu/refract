@@ -1,11 +1,11 @@
 import { getUploadedFileBytes } from "@/lib/file-store";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 type FileDownloadRouteContext = {
 	params: Promise<{ id: string }>;
 };
 
-const GET = async (_req: Request, { params }: FileDownloadRouteContext) => {
+const GET = async (_req: NextRequest, { params }: FileDownloadRouteContext) => {
 	const { id } = await params;
 	const { bytes, record } = await getUploadedFileBytes(id);
 	const body = new ArrayBuffer(bytes.byteLength);
