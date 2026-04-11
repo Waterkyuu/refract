@@ -4,22 +4,25 @@ import {
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
 	showFileWorkspaceAtom,
+	showTypstWorkspaceAtom,
 	showVncWorkspaceAtom,
 	vncUrlAtom,
 	workspaceChartAtom,
 	workspaceDatasetAtom,
 	workspaceFileAtom,
+	workspaceTypstContentAtom,
 	workspaceViewAtom,
 } from "@/atoms/chat";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAtomValue, useSetAtom } from "jotai";
-import { BarChart3, FileSpreadsheet, Monitor } from "lucide-react";
+import { BarChart3, FileSpreadsheet, FileText, Monitor } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useMemo } from "react";
 import ChartPanel from "./chart-panel";
 import DatasetPanel from "./dataset-panel";
 import FileInfoPanel from "./file-info-panel";
+import TypstPreview from "./typst-preview-panel";
 import { VncViewer } from "./vnc-panel";
 
 const WorkspacePanel = () => {
@@ -29,15 +32,17 @@ const WorkspacePanel = () => {
 	const chart = useAtomValue(workspaceChartAtom);
 	const dataset = useAtomValue(workspaceDatasetAtom);
 	const file = useAtomValue(workspaceFileAtom);
+	const typstContent = useAtomValue(workspaceTypstContentAtom);
 	const showVnc = useSetAtom(showVncWorkspaceAtom);
 	const showChart = useSetAtom(showChartWorkspaceAtom);
 	const showDataset = useSetAtom(showDatasetWorkspaceAtom);
 	const showFile = useSetAtom(showFileWorkspaceAtom);
+	const showTypst = useSetAtom(showTypstWorkspaceAtom);
 
 	const availableViews = useMemo(() => {
 		const views: Array<{
 			icon: typeof Monitor;
-			key: "vnc" | "chart" | "dataset" | "file";
+			key: "vnc" | "chart" | "dataset" | "file" | "typst";
 			label: string;
 			onClick: () => void;
 		}> = [];
@@ -74,6 +79,14 @@ const WorkspacePanel = () => {
 				onClick: () => showFile(file),
 			});
 		}
+		if (typstContent) {
+			views.push({
+				key: "typst",
+				label: t("typstViewer"),
+				icon: FileText,
+				onClick: () => showTypst(typstContent),
+			});
+		}
 
 		return views;
 	}, [
@@ -83,22 +96,26 @@ const WorkspacePanel = () => {
 		showChart,
 		showDataset,
 		showFile,
+		showTypst,
 		showVnc,
 		t,
+		typstContent,
 		vncUrl,
 	]);
 
 	const effectiveView = useMemo(() => {
 		if (activeView === "file" && file) return "file";
+		if (activeView === "typst" && typstContent) return "typst";
 		if (activeView === "dataset" && dataset) return "dataset";
 		if (activeView === "chart" && chart) return "chart";
 		if (activeView === "vnc" && vncUrl) return "vnc";
 		if (dataset) return "dataset";
 		if (file) return "file";
+		if (typstContent) return "typst";
 		if (chart) return "chart";
 		if (vncUrl) return "vnc";
 		return "empty";
-	}, [activeView, chart, dataset, file, vncUrl]);
+	}, [activeView, chart, dataset, file, typstContent, vncUrl]);
 
 	return (
 		<div className="flex h-full w-full flex-col bg-muted/30">
@@ -131,6 +148,9 @@ const WorkspacePanel = () => {
 				{effectiveView === "dataset" && <DatasetPanel />}
 				{effectiveView === "file" && <FileInfoPanel />}
 				{effectiveView === "chart" && <ChartPanel />}
+				{effectiveView === "typst" && (
+					<TypstPreview content={typstContent} isShowToC={false} />
+				)}
 				{effectiveView === "vnc" && <VncViewer url={vncUrl} />}
 				{effectiveView === "empty" && (
 					<div className="flex h-full w-full items-center justify-center text-muted-foreground text-sm">

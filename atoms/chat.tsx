@@ -21,6 +21,8 @@ const workspaceDatasetAtom = atom<WorkspaceDataset | null>(null);
 
 const workspaceFileAtom = atom<WorkspaceFile | null>(null);
 
+const workspaceTypstContentAtom = atom<string>("");
+
 const agentStatusAtom = atom<AgentStatus>("idle");
 
 const toolEventsAtom = atom<ToolCallEvent[]>([]);
@@ -66,6 +68,11 @@ const showFileWorkspaceAtom = atom(null, (_get, set, file: WorkspaceFile) => {
 	set(workspaceViewAtom, "file");
 });
 
+const showTypstWorkspaceAtom = atom(null, (_get, set, content: string) => {
+	set(workspaceTypstContentAtom, content);
+	set(workspaceViewAtom, "typst");
+});
+
 export {
 	firstUserInputAtom,
 	pendingHomeUploadsAtom,
@@ -74,6 +81,7 @@ export {
 	workspaceChartAtom,
 	workspaceDatasetAtom,
 	workspaceFileAtom,
+	workspaceTypstContentAtom,
 	agentStatusAtom,
 	toolEventsAtom,
 	dispatchToolEventAtom,
@@ -82,4 +90,5 @@ export {
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
 	showFileWorkspaceAtom,
+	showTypstWorkspaceAtom,
 };

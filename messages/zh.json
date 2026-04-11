@@ -108,6 +108,7 @@
 		"sandboxViewer": "沙盒查看器",
 		"chartViewer": "图表查看器",
 		"datasetViewer": "数据表查看器",
+		"typstViewer": "Typst 预览",
 		"datasetSummary": "{rows} 行，{columns} 列，工作表 {sheet}",
 		"downloadArtifact": "下载",
 		"chartGeneratedAt": "生成时间 {time}",

@@ -1,6 +1,6 @@
 import type { DatasetPreview } from "./file";
 
-type WorkspaceView = "empty" | "vnc" | "chart" | "dataset" | "file";
+type WorkspaceView = "empty" | "vnc" | "chart" | "dataset" | "file" | "typst";
 
 type WorkspaceChart = {
 	chart?: Record<string, unknown>;

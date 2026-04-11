@@ -108,6 +108,7 @@
 		"sandboxViewer": "Sandbox Viewer",
 		"chartViewer": "Chart Viewer",
 		"datasetViewer": "Dataset Viewer",
+		"typstViewer": "Typst Preview",
 		"datasetSummary": "{rows} rows, {columns} columns, sheet {sheet}",
 		"downloadArtifact": "Download",
 		"chartGeneratedAt": "Generated at {time}",
