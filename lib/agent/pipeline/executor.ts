@@ -74,6 +74,7 @@ const extractReportOutput = (text: string): ReportOutput | undefined => {
 	};
 };
 
+// Perform a single Agent step
 const executeStep = async (
 	agentSystemPrompt: string,
 	// biome-ignore lint/suspicious/noExplicitAny: ToolSet is not exported from ai

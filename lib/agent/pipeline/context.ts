@@ -18,6 +18,7 @@ const formatAttachedFiles = (attachedFiles: FileRecord[]) => {
 		.join("\n");
 };
 
+// Build prompts for each step
 const buildStepPrompt = (step: PipelineStep, ctx: PipelineContext): string => {
 	const base = `## User Request\n${ctx.userRequest}\n`;
 
@@ -67,6 +68,7 @@ ${ctx.plan.reportGoal ?? "Write a comprehensive analysis report incorporating th
 	}
 };
 
+// Create the initial pipeline context
 const createInitialContext = (
 	userRequest: string,
 	attachedFiles: FileRecord[],

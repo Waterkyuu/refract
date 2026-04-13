@@ -1,6 +1,6 @@
 ---
-name: note-expert
-description: Use this skill when you are asked to create a summary of notes and reports.
+name: report-expert
+description: Use this skill when you are asked to create a summary of notes or reports.
 ---
 
 # Template

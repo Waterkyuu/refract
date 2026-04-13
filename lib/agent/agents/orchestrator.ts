@@ -37,6 +37,7 @@ If the request does not need any pipeline stage, respond with:
 
 const FAST_MODEL = process.env.GLM_FAST_MODEL ?? "glm-4.5-x";
 
+// Extract the text returned by the JSON from the LLM
 const parsePlanFromText = (text: string): PipelinePlan => {
 	const jsonMatch = text.match(/\{[\s\S]*"steps"[\s\S]*\}/);
 	if (!jsonMatch) {
