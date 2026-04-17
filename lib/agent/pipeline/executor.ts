@@ -37,6 +37,7 @@ type StepToolResult = {
 
 type StepExecutionResult = {
 	text: string;
+	toolErrors: string[];
 	toolResults: StepToolResult[];
 };
 
@@ -161,6 +162,15 @@ const extractArtifactsFromToolResults = (
 		return parsed.success ? [parsed.data] : [];
 	});
 
+const formatStepFailure = (error: Error, toolErrors: string[]) => {
+	if (toolErrors.length === 0) {
+		return error.message;
+	}
+
+	const uniqueToolErrors = [...new Set(toolErrors)];
+	return `${uniqueToolErrors.join("\n\n")}\n\n${error.message}`;
+};
+
 const resolveDataOutput = (stepResult: StepExecutionResult): DataOutput => {
 	const parsedOutput = parseStructuredOutput(
 		stepResult.text,
@@ -277,12 +287,9 @@ const executeStep = async (
 		}
 	}
 
-	if (toolErrors.length > 0) {
-		throw new Error(toolErrors.join("\n"));
-	}
-
 	return {
 		text: fullText,
+		toolErrors,
 		toolResults,
 	};
 };
@@ -314,14 +321,13 @@ const executePipeline = async (
 
 	for (const step of pipelinePlan.steps) {
 		const agent = agentMap[step];
+		let stepResult: StepExecutionResult | undefined;
 		onEvent({ type: "step-start", step });
 
 		try {
 			const stepPrompt = buildStepPrompt(step, ctx);
-			const stepResult = await executeStep(
-				agent,
-				stepPrompt,
-				(content: string) => onEvent({ type: "step-delta", step, content }),
+			stepResult = await executeStep(agent, stepPrompt, (content: string) =>
+				onEvent({ type: "step-delta", step, content }),
 			);
 
 			switch (step) {
@@ -345,7 +351,10 @@ const executePipeline = async (
 				}
 			}
 		} catch (error) {
-			const message = error instanceof Error ? error.message : "Unknown error";
+			const message =
+				error instanceof Error
+					? formatStepFailure(error, stepResult?.toolErrors ?? [])
+					: "Unknown error";
 			onEvent({ type: "step-error", step, error: message });
 			break;
 		}

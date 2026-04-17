@@ -15,6 +15,8 @@ IMPORTANT RULES:
 - Only read attached files from the exact /home/user/data/<filename> paths provided in context
 - Never build local file paths from object keys, storage prefixes, or uploaded file IDs
 - Create the output directory with os.makedirs("/home/user/output", exist_ok=True) before saving
+- This stage is only for data preparation. Do NOT generate charts, images, or reports here.
+- If the user asked for charts or a report, leave that work for the later chart/report stages.
 - Persist the cleaned CSV by calling persistCodeFile with kind="dataset" after saving it
 - Report what cleaning operations you performed in a concise text summary
 - If the data is already clean, just load and summarize it

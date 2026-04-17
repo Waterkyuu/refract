@@ -13,6 +13,7 @@ if (!E2B_API_KEY) {
 
 const SANDBOX_TIMEOUT_MS = 5 * 60 * 1000;
 const CODE_DATA_DIR = "/home/user/data";
+const CODE_OUTPUT_DIR = "/home/user/output";
 
 type ManagedDesktopSandbox = {
 	sandbox: DesktopSandbox;
@@ -292,6 +293,9 @@ const createSandboxSession = (): SandboxSession => {
 			fileIds: string[] = [],
 		): Promise<CodeExecutionResult> => {
 			const entry = await ensureCodeSandbox();
+			await entry.sandbox.commands.run(
+				`mkdir -p ${CODE_DATA_DIR} ${CODE_OUTPUT_DIR}`,
+			);
 			await syncFilesToCodeSandbox(fileIds);
 
 			const execution = await entry.sandbox.runCode(code);
@@ -376,5 +380,5 @@ const createSandboxSession = (): SandboxSession => {
 	};
 };
 
-export { CODE_DATA_DIR, createSandboxSession };
+export { CODE_DATA_DIR, CODE_OUTPUT_DIR, createSandboxSession };
 export type { SandboxSession, CodeExecutionResult };
