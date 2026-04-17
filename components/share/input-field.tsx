@@ -302,7 +302,7 @@ const InputField = ({
 								type="button"
 								onClick={(event) => {
 									event.stopPropagation();
-									void handleRemoveAttachment(
+									handleRemoveAttachment(
 										attachments.findIndex((item) => item === file),
 									);
 								}}
@@ -355,13 +355,14 @@ const InputField = ({
 
 				setPendingHomePrompt(trimmedInput);
 				setPendingHomeUploads(getAttachmentMetadata());
-				resetLocalAttachments();
 				setIsHomeSubmitting(true);
 
 				const sessionID = generateId();
 				startTransition(() => {
 					router.push(`/chat/${sessionID}`);
 				});
+
+				resetLocalAttachments();
 				return;
 			}
 			newInput = input;

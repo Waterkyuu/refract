@@ -43,20 +43,18 @@ const DatasetPanel = memo(() => {
 				</p>
 			</div>
 			<div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
-				<table className="min-w-full border-collapse text-left text-xs sm:text-sm">
-					<thead className="sticky top-0 z-10 bg-background">
-						<tr className="border-b">
-							{preview.columns.map((column) => (
-								<th
-									key={column}
-									className="whitespace-nowrap px-3 py-2 font-medium"
-								>
-									{column}
-								</th>
-							))}
-						</tr>
-					</thead>
-					<tbody
+				<div className="min-w-full text-left text-xs sm:text-sm">
+					<div className="sticky top-0 z-10 flex w-full border-b bg-background">
+						{preview.columns.map((column) => (
+							<div
+								key={column}
+								className="min-w-0 flex-1 whitespace-nowrap px-3 py-2 font-medium"
+							>
+								{column}
+							</div>
+						))}
+					</div>
+					<div
 						style={{
 							height: `${virtualizer.getTotalSize()}px`,
 							position: "relative",
@@ -65,7 +63,7 @@ const DatasetPanel = memo(() => {
 						{virtualizer.getVirtualItems().map((virtualRow) => {
 							const row = preview.rows[virtualRow.index];
 							return (
-								<tr
+								<div
 									key={`${dataset.fileId}-${virtualRow.index}`}
 									className="absolute flex w-full border-b"
 									style={{
@@ -74,19 +72,19 @@ const DatasetPanel = memo(() => {
 									}}
 								>
 									{row.map((cell, cellIndex) => (
-										<td
+										<div
 											key={`${dataset.fileId}-${virtualRow.index}-${cellIndex}`}
-											className="max-w-56 truncate px-3 py-2 text-muted-foreground"
+											className="min-w-0 flex-1 truncate px-3 py-2 text-muted-foreground"
 											title={cell}
 										>
 											{cell}
-										</td>
+										</div>
 									))}
-								</tr>
+								</div>
 							);
 						})}
-					</tbody>
-				</table>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
