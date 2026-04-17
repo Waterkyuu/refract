@@ -236,9 +236,9 @@ const STEP_LABELS: Record<string, string> = {
 };
 
 const STEP_TITLES: Record<string, string> = {
-	data: "🧹[Data Cleaning Agent]",
-	chart: "📊[Chart Generation Agent]",
-	report: "📝[Report Writing Agent]",
+	data: "🧹 Data Cleaning Agent:",
+	chart: "📊 Chart Generation Agent:",
+	report: "📝 Report Writing Agent:",
 };
 
 const toPipelineRequestMessage = (
