@@ -1,99 +1,79 @@
 "use client";
 
-import { toolEventsAtom } from "@/atoms/chat";
+import { pipelineAtom } from "@/atoms/pipeline";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { ToolCallEvent } from "@/types/chat";
+import type { PipelineStep, StepStatus } from "@/types/agent";
 import { useAtomValue } from "jotai";
-import { Bug, ChevronDown, ChevronRight, Clock, Wrench } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { memo, useState } from "react";
+import {
+	AlertCircle,
+	CheckCircle2,
+	ChevronDown,
+	ChevronRight,
+	CircleDashed,
+	ListTodo,
+	LoaderCircle,
+} from "lucide-react";
+import { memo, useMemo, useState } from "react";
 
-const stateColors: Record<string, string> = {
-	"partial-call": "bg-yellow-100 text-yellow-700",
-	call: "bg-blue-100 text-blue-700",
-	result: "bg-green-100 text-green-700",
+const STEP_CONFIG: Record<
+	PipelineStep,
+	{ description: string; label: string }
+> = {
+	data: {
+		label: "Data",
+		description: "Read, clean and summarize attached data",
+	},
+	chart: {
+		label: "Chart",
+		description: "Generate charts from the cleaned dataset",
+	},
+	report: {
+		label: "Report",
+		description: "Write the final analysis report",
+	},
 };
 
-const stateLabels: Record<string, string> = {
-	"partial-call": "Streaming",
-	call: "Called",
-	result: "Done",
+const STATUS_CONFIG: Record<
+	StepStatus,
+	{
+		badgeClassName: string;
+		icon: typeof CircleDashed;
+		label: string;
+	}
+> = {
+	pending: {
+		label: "Pending",
+		icon: CircleDashed,
+		badgeClassName: "border-slate-200 bg-slate-100 text-slate-700",
+	},
+	running: {
+		label: "Running",
+		icon: LoaderCircle,
+		badgeClassName: "border-sky-200 bg-sky-100 text-sky-700",
+	},
+	completed: {
+		label: "Completed",
+		icon: CheckCircle2,
+		badgeClassName: "border-emerald-200 bg-emerald-100 text-emerald-700",
+	},
+	error: {
+		label: "Error",
+		icon: AlertCircle,
+		badgeClassName: "border-rose-200 bg-rose-100 text-rose-700",
+	},
 };
 
-type ToolEventItemProps = {
-	event: ToolCallEvent;
-};
-
-const ToolEventItem = memo(({ event }: ToolEventItemProps) => {
-	const [isExpanded, setIsExpanded] = useState(false);
-	const t = useTranslations("debug");
-
-	const durationStr =
-		event.durationMs != null
-			? `${(event.durationMs / 1000).toFixed(1)}s`
-			: "...";
-
-	return (
-		<div className="min-w-0 border-b last:border-b-0">
-			<button
-				type="button"
-				className="flex w-full min-w-0 items-center gap-2 px-3 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
-				onClick={() => setIsExpanded(!isExpanded)}
-			>
-				{isExpanded ? (
-					<ChevronDown className="size-3 shrink-0 text-muted-foreground" />
-				) : (
-					<ChevronRight className="size-3 shrink-0 text-muted-foreground" />
-				)}
-				<Wrench className="size-3 shrink-0 text-muted-foreground" />
-				<span className="flex-1 truncate font-mono text-[10px] sm:text-xs">
-					{event.toolName}
-				</span>
-				<Badge
-					variant="secondary"
-					className={cn(
-						"shrink-0 text-[9px] sm:text-[10px]",
-						stateColors[event.state] ?? "",
-					)}
-				>
-					{stateLabels[event.state] ?? event.state}
-				</Badge>
-				<span className="flex shrink-0 items-center gap-1 text-[9px] text-muted-foreground sm:text-[10px]">
-					<Clock className="size-2.5" />
-					{durationStr}
-				</span>
-			</button>
-			{isExpanded && (
-				<div className="min-w-0 space-y-2 bg-muted/20 px-3 pt-1 pb-3">
-					<div>
-						<p className="mb-1 text-[9px] text-muted-foreground uppercase sm:text-[10px]">
-							{t("arguments")}
-						</p>
-						<pre className="w-full max-w-full overflow-x-auto whitespace-pre-wrap break-all rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
-							{JSON.stringify(event.args, null, 2)}
-						</pre>
-					</div>
-					{event.result !== undefined && (
-						<div>
-							<p className="mb-1 text-[9px] text-muted-foreground uppercase sm:text-[10px]">
-								{t("result")}
-							</p>
-							<pre className="w-full max-w-full overflow-x-auto whitespace-pre-wrap break-all rounded bg-background p-2 font-mono text-[10px] sm:text-[11px]">
-								{JSON.stringify(event.result, null, 2)}
-							</pre>
-						</div>
-					)}
-				</div>
-			)}
-		</div>
-	);
-});
+const STEP_ORDER: PipelineStep[] = ["data", "chart", "report"];
 
 const DebugPanel = memo(() => {
-	const toolEvents = useAtomValue(toolEventsAtom);
+	const { currentStep, plan, stepStatus } = useAtomValue(pipelineAtom);
 	const [isOpen, setIsOpen] = useState(false);
-	const t = useTranslations("debug");
+
+	const completedCount = useMemo(
+		() => STEP_ORDER.filter((step) => stepStatus[step] === "completed").length,
+		[stepStatus],
+	);
 
 	return (
 		<div className="min-w-0 shrink-0 border-t bg-background">
@@ -102,15 +82,15 @@ const DebugPanel = memo(() => {
 				className="flex w-full items-center gap-2 px-4 py-2 text-left transition-colors duration-200 hover:bg-muted/50"
 				onClick={() => setIsOpen(!isOpen)}
 			>
-				<Bug className="size-3.5 text-muted-foreground" />
+				<ListTodo className="size-3.5 text-muted-foreground" />
 				<span className="font-medium text-[10px] sm:text-xs">
-					{t("panelTitle")}
+					Pipeline Steps
 				</span>
 				<Badge
 					variant="secondary"
 					className="ml-auto text-[9px] sm:text-[10px]"
 				>
-					{t("events", { count: toolEvents.length })}
+					{completedCount}/{STEP_ORDER.length} completed
 				</Badge>
 				{isOpen ? (
 					<ChevronDown className="size-3 text-muted-foreground" />
@@ -119,16 +99,69 @@ const DebugPanel = memo(() => {
 				)}
 			</button>
 			{isOpen && (
-				<div className="custom-scrollbar max-h-[40vh] min-w-0 overflow-y-auto overflow-x-hidden overscroll-contain">
-					{toolEvents.length === 0 ? (
-						<p className="px-4 py-3 text-[10px] text-muted-foreground sm:text-xs">
-							{t("noEvents")}
+				<div className="space-y-2 px-4 pt-1 pb-4">
+					{plan?.reasoning ? (
+						<p className="rounded-md border bg-muted/30 px-3 py-2 text-[10px] text-muted-foreground sm:text-xs">
+							{plan.reasoning}
 						</p>
-					) : (
-						toolEvents.map((event) => (
-							<ToolEventItem key={event.id} event={event} />
-						))
-					)}
+					) : null}
+					<div className="space-y-2">
+						{STEP_ORDER.map((step) => {
+							const { description, label } = STEP_CONFIG[step];
+							const status = stepStatus[step];
+							const {
+								badgeClassName,
+								icon: StatusIcon,
+								label: statusLabel,
+							} = STATUS_CONFIG[status];
+							const isCurrent = currentStep === step;
+
+							return (
+								<div
+									key={step}
+									className={cn(
+										"flex items-start gap-3 rounded-lg border px-3 py-3 transition-colors duration-200",
+										isCurrent && "border-sky-300 bg-sky-50/60",
+									)}
+								>
+									<StatusIcon
+										className={cn(
+											"mt-0.5 size-4 shrink-0",
+											status === "pending" && "text-slate-500",
+											status === "running" && "animate-spin text-sky-600",
+											status === "completed" && "text-emerald-600",
+											status === "error" && "text-rose-600",
+										)}
+									/>
+									<div className="min-w-0 flex-1">
+										<div className="flex flex-wrap items-center gap-2">
+											<p className="font-medium text-xs sm:text-sm">{label}</p>
+											<Badge
+												variant="outline"
+												className={cn(
+													"text-[9px] sm:text-[10px]",
+													badgeClassName,
+												)}
+											>
+												{statusLabel}
+											</Badge>
+											{isCurrent ? (
+												<Badge
+													variant="secondary"
+													className="text-[9px] sm:text-[10px]"
+												>
+													Current
+												</Badge>
+											) : null}
+										</div>
+										<p className="mt-1 text-[10px] text-muted-foreground sm:text-xs">
+											{description}
+										</p>
+									</div>
+								</div>
+							);
+						})}
+					</div>
 				</div>
 			)}
 		</div>
