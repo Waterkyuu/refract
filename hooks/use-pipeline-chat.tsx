@@ -235,6 +235,12 @@ const STEP_LABELS: Record<string, string> = {
 	report: "Report Writing",
 };
 
+const STEP_TITLES: Record<string, string> = {
+	data: "🧹[Data Cleaning Agent]",
+	chart: "📊[Chart Generation Agent]",
+	report: "📝[Report Writing Agent]",
+};
+
 const toPipelineRequestMessage = (
 	message: UIMessage,
 ): Omit<UIMessage, "id"> => ({
@@ -439,7 +445,7 @@ const usePipelineChat = (
 
 							assistantParts.push({
 								type: "text",
-								text: `\n--- **[${STEP_LABELS[evt.step] ?? evt.step} Agent]** ---\n\n`,
+								text: `\n${STEP_TITLES[evt.step] ?? evt.step}\n\n`,
 							});
 							break;
 						}
