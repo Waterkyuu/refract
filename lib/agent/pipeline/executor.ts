@@ -1,7 +1,7 @@
-import { createChartAgent } from "@/lib/agent/agents/chart-agent";
-import { createDataAgent } from "@/lib/agent/agents/data-agent";
-import { runOrchestrator } from "@/lib/agent/agents/orchestrator";
-import { createReportAgent } from "@/lib/agent/agents/report-agent";
+import { createChartAgent } from "@/lib/agent/multi-agents/chart-agent";
+import { createDataAgent } from "@/lib/agent/multi-agents/data-agent";
+import { runOrchestrator } from "@/lib/agent/multi-agents/orchestrator";
+import { createReportAgent } from "@/lib/agent/multi-agents/report-agent";
 import {
 	buildStepPrompt,
 	createInitialContext,

@@ -49,7 +49,7 @@ const Header = () => {
 					showTrigger={false}
 				/>
 			)}
-			<div className="relative flex w-full items-center justify-between border-b px-3 py-3 md:px-4">
+			<div className="relative flex w-full items-center justify-between px-3 py-3 md:px-4">
 				{/* Sidebar toggle button */}
 				<Button
 					variant="ghost"
@@ -93,7 +93,7 @@ const Header = () => {
 								href="/"
 								className="font-lora text-xl sm:text-2xl md:text-4xl"
 							>
-								Fire Wave
+								Refract
 							</Link>
 							<Button
 								variant="ghost"

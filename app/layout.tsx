@@ -21,8 +21,9 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-	title: "Fire Wave",
-	description: "Auto Agent to use computer",
+	title: "Refract: 24/7 helper",
+	description:
+		"Data analysis, paper writing, report writing, resume generation, Canvas generation – your best partner, working 24/7.",
 };
 
 export default async function RootLayout({
