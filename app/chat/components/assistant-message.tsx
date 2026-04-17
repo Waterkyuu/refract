@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { UIMessage } from "ai";
 import {
 	Bot,
@@ -150,8 +151,34 @@ const TextBlock = memo(({ text }: { text: string }) => {
 	const deferredText = useDeferredValue(text);
 
 	return (
-		<div className="prose prose-sm max-w-none break-words rounded-2xl bg-muted px-4 py-2.5 text-xs sm:text-sm">
-			<Markdown>{deferredText}</Markdown>
+		<div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-muted px-4 py-2.5 text-xs sm:text-sm">
+			<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
+				<Markdown
+					components={{
+						code: ({ className, ...props }) => (
+							<code
+								{...props}
+								className={cn("whitespace-pre-wrap break-all", className)}
+							/>
+						),
+						pre: ({ children, ...props }) => (
+							<pre
+								{...props}
+								className="max-w-full overflow-x-auto whitespace-pre-wrap break-words"
+							>
+								{children}
+							</pre>
+						),
+						table: ({ children, ...props }) => (
+							<div className="max-w-full overflow-x-auto">
+								<table {...props}>{children}</table>
+							</div>
+						),
+					}}
+				>
+					{deferredText}
+				</Markdown>
+			</div>
 		</div>
 	);
 });
@@ -189,7 +216,7 @@ const AssistantMessage = memo(
 					<Bot className="size-3.5" />
 				</div>
 
-				<div className="min-w-0 max-w-[80%] space-y-1">
+				<div className="min-w-0 max-w-[min(80%,42rem)] space-y-1">
 					{renderableParts.map((part, i) => {
 						if (isReasoningPart(part)) {
 							return <ReasoningBlock key={i} text={part.text} />;
