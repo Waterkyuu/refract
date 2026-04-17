@@ -22,6 +22,8 @@ type AssistantMessageProps = {
 	onShowVnc?: () => void;
 };
 
+const MESSAGE_COLLAPSE_TEXT_LIMIT = 1800;
+
 const ReasoningBlock = memo(({ text }: { text: string }) => {
 	const t = useTranslations("message");
 
@@ -196,6 +198,7 @@ const isToolPart = (p: Record<string, unknown>): boolean =>
 const AssistantMessage = memo(
 	({ message, thinkingTime, onShowVnc }: AssistantMessageProps) => {
 		const t = useTranslations("message");
+		const [isExpanded, setIsExpanded] = useState(false);
 
 		const renderableParts = useMemo(
 			() =>
@@ -208,6 +211,14 @@ const AssistantMessage = memo(
 		const hasText = renderableParts.some(
 			(p) => p.type === "text" && (p as { text: string }).text,
 		);
+		const textLength = renderableParts.reduce((total, part) => {
+			if (isTextPart(part) || isReasoningPart(part)) {
+				return total + part.text.length;
+			}
+
+			return total;
+		}, 0);
+		const shouldCollapse = textLength > MESSAGE_COLLAPSE_TEXT_LIMIT;
 
 		return (
 			<div className="flex justify-start gap-3 px-4 py-3">
@@ -220,24 +231,45 @@ const AssistantMessage = memo(
 				</div>
 
 				<div className="min-w-0 max-w-[min(80%,42rem)] space-y-1">
-					{renderableParts.map((part, i) => {
-						if (isReasoningPart(part)) {
-							return <ReasoningBlock key={i} text={part.text} />;
-						}
+					<div className="relative">
+						<div
+							className={cn(
+								"space-y-1",
+								shouldCollapse && !isExpanded && "max-h-96 overflow-hidden",
+							)}
+						>
+							{renderableParts.map((part, i) => {
+								if (isReasoningPart(part)) {
+									return <ReasoningBlock key={i} text={part.text} />;
+								}
 
-						if (isTextPart(part)) {
-							if (!part.text) return null;
-							return <TextBlock key={i} text={part.text} />;
-						}
+								if (isTextPart(part)) {
+									if (!part.text) return null;
+									return <TextBlock key={i} text={part.text} />;
+								}
 
-						if (isToolPart(part)) {
-							return (
-								<ToolCallBlock key={i} part={part} onShowVnc={onShowVnc} />
-							);
-						}
+								if (isToolPart(part)) {
+									return (
+										<ToolCallBlock key={i} part={part} onShowVnc={onShowVnc} />
+									);
+								}
 
-						return null;
-					})}
+								return null;
+							})}
+						</div>
+
+						{shouldCollapse && !isExpanded && (
+							<div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end bg-gradient-to-t from-background via-background/95 to-transparent px-2 pt-10 pb-2">
+								<button
+									type="button"
+									className="pointer-events-auto rounded-full border bg-background px-3 py-1.5 font-medium text-[10px] text-foreground shadow-sm transition-colors duration-200 hover:bg-muted sm:text-xs"
+									onClick={() => setIsExpanded(true)}
+								>
+									{t("showMore")}
+								</button>
+							</div>
+						)}
+					</div>
 
 					{thinkingTime != null && hasText && (
 						<p className="text-[9px] text-muted-foreground sm:text-[10px]">

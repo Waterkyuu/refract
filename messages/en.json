@@ -126,6 +126,7 @@
 		"toolCompleted": "Completed",
 		"toolFailed": "Failed",
 		"toolUnknown": "Unknown",
+		"showMore": "Show more",
 		"showToolDetails": "Show tool details",
 		"hideToolDetails": "Hide tool details"
 	},

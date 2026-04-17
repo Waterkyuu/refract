@@ -126,6 +126,7 @@
 		"toolCompleted": "已完成",
 		"toolFailed": "失败",
 		"toolUnknown": "未知",
+		"showMore": "展开全部",
 		"showToolDetails": "显示工具详情",
 		"hideToolDetails": "隐藏工具详情"
 	},
