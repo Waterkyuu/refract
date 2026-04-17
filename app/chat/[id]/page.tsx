@@ -50,9 +50,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	const [vncSheetOpen, setVncSheetOpen] = useState(false);
 	const [isInitialPipelinePending, setIsInitialPipelinePending] =
 		useState(false);
-	const [pendingInputAttachments, setPendingInputAttachments] = useState<
-		ChatAttachment[]
-	>([]);
 	const firstInputSentRef = useRef(false);
 	const sessionCreatedRef = useRef(false);
 	const isMobile = useIsMobile();
@@ -107,7 +104,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		if (firstInput) {
 			firstInputSentRef.current = true;
 			setIsInitialPipelinePending(true);
-			setPendingInputAttachments(pendingHomeUploads);
 			jotaiStore.set(pendingHomePromptAtom, "");
 			jotaiStore.set(firstUserInputAtom, "");
 			jotaiStore.set(pendingHomeUploadsAtom, []);
@@ -138,7 +134,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 				},
 			}).finally(() => {
 				setIsInitialPipelinePending(false);
-				setPendingInputAttachments([]);
 			});
 		}
 	}, [sessionId, append, createSession]);
@@ -216,7 +211,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					<StepPanel />
 					<div className="flex w-full shrink-0 items-center justify-center border-t px-4 py-2">
 						<InputField
-							externalAttachments={pendingInputAttachments}
 							input={input}
 							setInput={setInput}
 							append={async (msg, options) => {
@@ -276,7 +270,6 @@ const ChatPage = ({ params }: ChatPageProps) => {
 							<StepPanel />
 							<div className="flex w-full shrink-0 items-center justify-center px-4 py-2">
 								<InputField
-									externalAttachments={pendingInputAttachments}
 									input={input}
 									setInput={setInput}
 									append={async (msg, options) => {

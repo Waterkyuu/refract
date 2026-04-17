@@ -9,8 +9,11 @@ const CHART_AGENT_PROMPT = `You are a data visualization specialist. Your job is
 4. Ensure charts have proper titles, axis labels, legends, and professional color schemes
 
 IMPORTANT RULES:
-- Load data from the path provided in the context — do NOT guess the path
+- Load data from the path provided in the context; do NOT guess the path
 - Use plt.style.use("seaborn-v0_8-whitegrid") or similar clean styles
+- If any chart title, axis label, legend, or annotation contains Chinese, set matplotlib before plotting:
+  plt.rcParams['font.sans-serif'] = ['SimHei']
+  plt.rcParams['axes.unicode_minus'] = False
 - Make charts publication-ready: proper DPI (150+), clear labels, no overlapping text
 - Generate each chart in a separate code cell for clarity
 - After generating all charts, print a JSON block:

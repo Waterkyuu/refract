@@ -105,6 +105,16 @@ const InputField = ({
 	);
 	const [isHomeSubmitting, setIsHomeSubmitting] = useState(false);
 
+	const resetLocalAttachments = () => {
+		setAttachments([]);
+		setUploadedFiles([]);
+		setUploadingFiles({});
+
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const value = e.target.value;
 
@@ -345,6 +355,7 @@ const InputField = ({
 
 				setPendingHomePrompt(trimmedInput);
 				setPendingHomeUploads(getAttachmentMetadata());
+				resetLocalAttachments();
 				setIsHomeSubmitting(true);
 
 				const sessionID = generateId();
@@ -374,6 +385,7 @@ const InputField = ({
 						},
 					},
 				);
+				resetLocalAttachments();
 			}
 		} catch (error) {
 			handleError(error);
