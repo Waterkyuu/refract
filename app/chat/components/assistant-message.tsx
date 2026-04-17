@@ -150,36 +150,74 @@ const ToolCallBlock = memo(
 
 const TextBlock = memo(({ text }: { text: string }) => {
 	const deferredText = useDeferredValue(text);
+	const t = useTranslations("message");
+	const [isExpanded, setIsExpanded] = useState(false);
+	const shouldCollapse = text.length > MESSAGE_COLLAPSE_TEXT_LIMIT;
+
+	useEffect(() => {
+		setIsExpanded(false);
+	}, [text]);
 
 	return (
-		<div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-muted px-4 py-2.5 text-xs sm:text-sm">
-			<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
-				<Markdown
-					components={{
-						code: ({ className, ...props }) => (
-							<code
-								{...props}
-								className={cn("whitespace-pre-wrap break-all", className)}
-							/>
-						),
-						pre: ({ children, ...props }) => (
-							<pre
-								{...props}
-								className="max-w-full overflow-x-auto whitespace-pre-wrap break-words"
-							>
-								{children}
-							</pre>
-						),
-						table: ({ children, ...props }) => (
-							<div className="max-w-full overflow-x-auto">
-								<table {...props}>{children}</table>
-							</div>
-						),
-					}}
-				>
-					{deferredText}
-				</Markdown>
+		<div className="relative">
+			<div
+				className={cn(
+					"min-w-0 max-w-full overflow-hidden rounded-2xl bg-muted px-4 py-2.5 text-xs sm:text-sm",
+					shouldCollapse && !isExpanded && "max-h-96",
+				)}
+			>
+				<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
+					<Markdown
+						components={{
+							code: ({ className, ...props }) => (
+								<code
+									{...props}
+									className={cn("whitespace-pre-wrap break-all", className)}
+								/>
+							),
+							pre: ({ children, ...props }) => (
+								<pre
+									{...props}
+									className="max-w-full overflow-x-auto whitespace-pre-wrap break-words"
+								>
+									{children}
+								</pre>
+							),
+							table: ({ children, ...props }) => (
+								<div className="max-w-full overflow-x-auto">
+									<table {...props}>{children}</table>
+								</div>
+							),
+						}}
+					>
+						{deferredText}
+					</Markdown>
+				</div>
 			</div>
+
+			{shouldCollapse && !isExpanded && (
+				<div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end bg-gradient-to-t from-background via-background/95 to-transparent px-2 pt-10 pb-2">
+					<button
+						type="button"
+						className="pointer-events-auto rounded-full border bg-background px-3 py-1.5 font-medium text-[10px] text-foreground shadow-sm transition-colors duration-200 hover:bg-muted sm:text-xs"
+						onClick={() => setIsExpanded(true)}
+					>
+						{t("showMore")}
+					</button>
+				</div>
+			)}
+
+			{shouldCollapse && isExpanded && (
+				<div className="flex justify-end px-2 pt-2">
+					<button
+						type="button"
+						className="rounded-full border bg-background px-3 py-1.5 font-medium text-[10px] text-foreground shadow-sm transition-colors duration-200 hover:bg-muted sm:text-xs"
+						onClick={() => setIsExpanded(false)}
+					>
+						{t("showLess")}
+					</button>
+				</div>
+			)}
 		</div>
 	);
 });
@@ -198,11 +236,6 @@ const isToolPart = (p: Record<string, unknown>): boolean =>
 const AssistantMessage = memo(
 	({ message, thinkingTime, onShowVnc }: AssistantMessageProps) => {
 		const t = useTranslations("message");
-		const [isExpanded, setIsExpanded] = useState(false);
-
-		useEffect(() => {
-			setIsExpanded(false);
-		}, [message.id]);
 
 		const renderableParts = useMemo(
 			() =>
@@ -215,14 +248,6 @@ const AssistantMessage = memo(
 		const hasText = renderableParts.some(
 			(p) => p.type === "text" && (p as { text: string }).text,
 		);
-		const textLength = renderableParts.reduce((total, part) => {
-			if (isTextPart(part) || isReasoningPart(part)) {
-				return total + part.text.length;
-			}
-
-			return total;
-		}, 0);
-		const shouldCollapse = textLength > MESSAGE_COLLAPSE_TEXT_LIMIT;
 
 		return (
 			<div className="flex justify-start gap-3 px-4 py-3">
@@ -235,57 +260,35 @@ const AssistantMessage = memo(
 				</div>
 
 				<div className="min-w-0 max-w-[min(80%,42rem)] space-y-1">
-					<div className="relative">
-						<div
-							className={cn(
-								"space-y-1",
-								shouldCollapse && !isExpanded && "max-h-96 overflow-hidden",
-							)}
-						>
-							{renderableParts.map((part, i) => {
-								if (isReasoningPart(part)) {
-									return <ReasoningBlock key={i} text={part.text} />;
-								}
+					{renderableParts.map((part, i) => {
+						if (isReasoningPart(part)) {
+							return (
+								<ReasoningBlock
+									key={`${message.id}-reasoning-${i}`}
+									text={part.text}
+								/>
+							);
+						}
 
-								if (isTextPart(part)) {
-									if (!part.text) return null;
-									return <TextBlock key={i} text={part.text} />;
-								}
+						if (isTextPart(part)) {
+							if (!part.text) return null;
+							return (
+								<TextBlock key={`${message.id}-text-${i}`} text={part.text} />
+							);
+						}
 
-								if (isToolPart(part)) {
-									return (
-										<ToolCallBlock key={i} part={part} onShowVnc={onShowVnc} />
-									);
-								}
+						if (isToolPart(part)) {
+							return (
+								<ToolCallBlock
+									key={`${message.id}-tool-${i}`}
+									part={part}
+									onShowVnc={onShowVnc}
+								/>
+							);
+						}
 
-								return null;
-							})}
-						</div>
-
-						{shouldCollapse && !isExpanded && (
-							<div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-end bg-gradient-to-t from-background via-background/95 to-transparent px-2 pt-10 pb-2">
-								<button
-									type="button"
-									className="pointer-events-auto rounded-full border bg-background px-3 py-1.5 font-medium text-[10px] text-foreground shadow-sm transition-colors duration-200 hover:bg-muted sm:text-xs"
-									onClick={() => setIsExpanded(true)}
-								>
-									{t("showMore")}
-								</button>
-							</div>
-						)}
-
-						{shouldCollapse && isExpanded && (
-							<div className="flex justify-end px-2 pt-2">
-								<button
-									type="button"
-									className="rounded-full border bg-background px-3 py-1.5 font-medium text-[10px] text-foreground shadow-sm transition-colors duration-200 hover:bg-muted sm:text-xs"
-									onClick={() => setIsExpanded(false)}
-								>
-									{t("showLess")}
-								</button>
-							</div>
-						)}
-					</div>
+						return null;
+					})}
 
 					{thinkingTime != null && hasText && (
 						<p className="text-[9px] text-muted-foreground sm:text-[10px]">
