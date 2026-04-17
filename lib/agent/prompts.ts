@@ -40,7 +40,7 @@ const buildChatSystemPrompt = (
 ## Available Skills
 ${getSkillList()}
 
-Use the load_skill tool when you need detailed information about handling a specific type of request.
+Use the loadSkill tool when you need detailed information about handling a specific type of request.
 
 ATTACHED FILES:
 ${formatAttachedFiles(attachedFiles)}

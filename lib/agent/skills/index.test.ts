@@ -1,12 +1,17 @@
 import { findSkill, getSkillList, getSkills } from "./index";
 
 describe("skill loader", () => {
-	it("loads all 3 skills from disk", () => {
+	it("loads all skills from disk", () => {
 		const skills = getSkills();
-		expect(skills).toHaveLength(3);
+		expect(skills).toHaveLength(4);
 
 		const names = skills.map((s) => s.name).sort();
-		expect(names).toEqual(["note-expert", "paper-expert", "typst-expert"]);
+		expect(names).toEqual([
+			"paper-expert",
+			"report-expert",
+			"resume-expert",
+			"typst-expert",
+		]);
 	});
 
 	it("each skill has non-empty name, description and content", () => {
@@ -28,9 +33,13 @@ describe("skill loader", () => {
 		expect(paper).toBeDefined();
 		expect(paper?.content).toContain("graceful-genetics");
 
-		const note = findSkill("note-expert");
-		expect(note).toBeDefined();
-		expect(note?.content).toContain("obsidius");
+		const report = findSkill("report-expert");
+		expect(report).toBeDefined();
+		expect(report?.content).toContain("obsidius");
+
+		const resume = findSkill("resume-expert");
+		expect(resume).toBeDefined();
+		expect(resume?.content).toContain("Jane Doe");
 	});
 
 	it("findSkill returns undefined for unknown skill", () => {
@@ -41,9 +50,10 @@ describe("skill loader", () => {
 		const list = getSkillList();
 		expect(list).toContain("- **typst-expert**:");
 		expect(list).toContain("- **paper-expert**:");
-		expect(list).toContain("- **note-expert**:");
+		expect(list).toContain("- **report-expert**:");
+		expect(list).toContain("- **resume-expert**:");
 
 		const lines = list.split("\n");
-		expect(lines).toHaveLength(3);
+		expect(lines).toHaveLength(4);
 	});
 });

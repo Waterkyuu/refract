@@ -1,8 +1,4 @@
-import type {
-	PipelineState,
-	PipelineStep,
-	StepStatus,
-} from "@/lib/agent/agents/types";
+import type { PipelineState, PipelineStep, StepStatus } from "@/types/agent";
 import { atom } from "jotai";
 
 const INITIAL_PIPELINE_STATE: PipelineState = {
@@ -35,7 +31,12 @@ const updatePipelineStepAtom = atom(
 
 		set(pipelineAtom, {
 			...prev,
-			currentStep: status === "running" ? step : prev.currentStep,
+			currentStep:
+				status === "running"
+					? step
+					: prev.currentStep === step
+						? null
+						: prev.currentStep,
 			completedSteps,
 			stepStatus: { ...prev.stepStatus, [step]: status },
 		});

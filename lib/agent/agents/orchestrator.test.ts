@@ -1,4 +1,4 @@
-import { parsePlanFromText } from "./orchestrator";
+import { canonicalizeSteps, parsePlanFromText } from "./orchestrator";
 
 describe("parsePlanFromText", () => {
 	const validJson = JSON.stringify({
@@ -78,5 +78,22 @@ describe("parsePlanFromText", () => {
 		const text = `\`\`\`json\n${validJson}\n\`\`\``;
 		const result = parsePlanFromText(text);
 		expect(result.steps).toEqual(["data", "chart", "report"]);
+	});
+
+	it("canonicalizes out-of-order steps and adds dependencies", () => {
+		const input = JSON.stringify({
+			steps: ["report", "chart"],
+			reasoning: "want charts and a write-up",
+		});
+		const result = parsePlanFromText(input);
+		expect(result.steps).toEqual(["data", "chart", "report"]);
+	});
+
+	it("deduplicates repeated steps", () => {
+		expect(canonicalizeSteps(["data", "chart", "data", "report"])).toEqual([
+			"data",
+			"chart",
+			"report",
+		]);
 	});
 });

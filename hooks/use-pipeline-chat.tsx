@@ -14,7 +14,7 @@ import {
 	setPipelinePlanAtom,
 	updatePipelineStepAtom,
 } from "@/atoms/pipeline";
-import type { PipelineStreamEvent } from "@/lib/agent/agents/types";
+import type { PipelineStreamEvent } from "@/types/agent";
 import type { ChatMessageMetadata, ToolCallEvent } from "@/types/chat";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
@@ -235,6 +235,13 @@ const STEP_LABELS: Record<string, string> = {
 	report: "Report Writing",
 };
 
+const toPipelineRequestMessage = (
+	message: UIMessage,
+): Omit<UIMessage, "id"> => ({
+	role: message.role,
+	parts: message.parts,
+});
+
 const usePipelineChat = (
 	options: UsePipelineChatOptions = {},
 ): UsePipelineChatReturn => {
@@ -380,6 +387,7 @@ const usePipelineChat = (
 
 	const processPipelineStream = async (
 		response: Response,
+		historyMessages: UIMessage[],
 		userMessage: UIMessage,
 	) => {
 		const reader = response.body?.getReader();
@@ -447,6 +455,19 @@ const usePipelineChat = (
 								step: evt.step,
 								status: "completed",
 							});
+
+							if (
+								evt.step === "data" &&
+								"artifact" in evt.output &&
+								evt.output.artifact.kind === "dataset" &&
+								evt.output.artifact.preview
+							) {
+								jotaiStore.set(showDatasetWorkspaceAtom, {
+									fileId: evt.output.artifact.fileId,
+									filename: evt.output.artifact.filename,
+									preview: evt.output.artifact.preview,
+								});
+							}
 							break;
 						}
 						case "step-error": {
@@ -474,7 +495,11 @@ const usePipelineChat = (
 						})),
 					};
 
-					setPipelineMessages([userMessage, assistantMessage]);
+					setPipelineMessages([
+						...historyMessages,
+						userMessage,
+						assistantMessage,
+					]);
 				}
 			}
 		} finally {
@@ -491,8 +516,9 @@ const usePipelineChat = (
 						text: p.text,
 					})),
 				};
-				setPipelineMessages([userMessage, finalMessage]);
-				onFinish?.([userMessage, finalMessage]);
+				const nextMessages = [...historyMessages, userMessage, finalMessage];
+				setPipelineMessages(nextMessages);
+				chat.setMessages(nextMessages);
 			}
 		}
 	};
@@ -505,6 +531,9 @@ const usePipelineChat = (
 				metadata?: ChatMessageMetadata;
 			},
 		) => {
+			const historyMessages =
+				pipelineMessages.length > 0 ? pipelineMessages : renderedMessages;
+
 			setThinkingTime(null);
 			reasoningStartTimeRef.current = null;
 			processedToolCallsRef.current.clear();
@@ -524,15 +553,16 @@ const usePipelineChat = (
 
 			try {
 				abortRef.current = new AbortController();
+				setPipelineMessages([...historyMessages, userMessage]);
 				const response = await fetch(api, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						fileIds,
 						messages: [
+							...historyMessages.map(toPipelineRequestMessage),
 							{
 								role: "user",
-								content: text,
 								parts: [{ type: "text", text }],
 							},
 						],
@@ -542,7 +572,7 @@ const usePipelineChat = (
 				});
 
 				if (response.ok && response.body) {
-					await processPipelineStream(response, userMessage);
+					await processPipelineStream(response, historyMessages, userMessage);
 					return;
 				}
 			} catch (err) {
@@ -561,7 +591,7 @@ const usePipelineChat = (
 				{ body: opts?.body },
 			);
 		},
-		[chat, api],
+		[chat, api, pipelineMessages, renderedMessages],
 	);
 
 	const reload = useCallback(async () => {

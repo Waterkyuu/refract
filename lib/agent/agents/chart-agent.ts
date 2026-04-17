@@ -1,5 +1,6 @@
 import { createChartTools } from "@/lib/agent/tools/chart-tools";
-import type { AgentDefinition } from "./types";
+import type { SandboxSession } from "@/lib/e2b";
+import type { AgentDefinition } from "@/types/agent";
 
 const CHART_AGENT_PROMPT = `You are a data visualization specialist. Your job is to:
 1. Load the cleaned dataset from the file path provided in context
@@ -15,19 +16,30 @@ IMPORTANT RULES:
 - After generating all charts, print a JSON block:
   {
     "chartCount": <number>,
-    "descriptions": ["Chart 1: ...", "Chart 2: ..."]
+    "descriptions": ["Chart 1: ...", "Chart 2: ..."],
+    "artifacts": [
+      {
+        "fileId": "<persisted chart file id>",
+        "filename": "<persisted chart filename>",
+        "downloadUrl": "<download url>"
+      }
+    ]
   }
-- Call persistLatestChart after each chart if the user wants to download them`;
+- If you persist charts, include the persisted artifact metadata in artifacts`;
 
 type ChartAgentOptions = {
 	fileIds?: string[];
+	sandboxSession: SandboxSession;
 };
 
-const createChartAgent = (opts: ChartAgentOptions = {}): AgentDefinition => ({
+const createChartAgent = (opts: ChartAgentOptions): AgentDefinition => ({
 	name: "Chart Agent",
 	step: "chart",
 	systemPrompt: CHART_AGENT_PROMPT,
-	tools: createChartTools({ fileIds: opts.fileIds }),
+	tools: createChartTools({
+		fileIds: opts.fileIds,
+		sandboxSession: opts.sandboxSession,
+	}),
 	maxSteps: 10,
 });
 

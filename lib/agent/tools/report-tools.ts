@@ -1,4 +1,5 @@
 import { findSkill, getSkills } from "@/lib/agent/skills";
+import type { SandboxSession } from "@/lib/e2b";
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
 import { createCodeInterpreterTool, createPersistCodeFileTool } from "./shared";
@@ -24,9 +25,9 @@ const createLoadSkillTool = () =>
 		},
 	});
 
-const createReportTools = () => ({
-	codeInterpreter: createCodeInterpreterTool({ fileIds: [] }),
-	persistCodeFile: createPersistCodeFileTool(),
+const createReportTools = (sandboxSession: SandboxSession) => ({
+	codeInterpreter: createCodeInterpreterTool({ fileIds: [], sandboxSession }),
+	persistCodeFile: createPersistCodeFileTool(sandboxSession),
 	loadSkill: createLoadSkillTool(),
 });
 

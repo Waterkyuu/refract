@@ -1,7 +1,9 @@
 import type { FileRecord } from "@/types";
+import type { PipelinePlan } from "@/types/agent";
 import { generateText } from "ai";
 import { zhipu } from "zhipu-ai-provider";
-import type { PipelinePlan } from "./types";
+
+const STEP_ORDER = ["data", "chart", "report"] as const;
 
 const ORCHESTRATOR_PROMPT = `You are a pipeline planner for a data analysis system. Analyze the user's request and decide which processing stages are needed.
 
@@ -35,7 +37,27 @@ If the request does not need any pipeline stage, respond with:
   "reasoning": "explanation"
 }`;
 
-const FAST_MODEL = process.env.GLM_FAST_MODEL ?? "glm-4.5-x";
+const FAST_MODEL = process.env.GLM_FAST_MODEL ?? "glm-4.7-flash";
+
+const canonicalizeSteps = (steps: string[]): PipelinePlan["steps"] => {
+	const requestedSteps = new Set(
+		steps.filter((step): step is PipelinePlan["steps"][number] =>
+			STEP_ORDER.includes(step as (typeof STEP_ORDER)[number]),
+		),
+	);
+
+	if (requestedSteps.has("chart") || requestedSteps.has("report")) {
+		requestedSteps.add("data");
+	}
+
+	return STEP_ORDER.filter((step) => requestedSteps.has(step));
+};
+
+const normalizePlan = (plan: PipelinePlan): PipelinePlan => ({
+	...plan,
+	reasoning: plan.reasoning?.trim() || "No reasoning provided by orchestrator",
+	steps: canonicalizeSteps(plan.steps),
+});
 
 // Extract the text returned by the JSON from the LLM
 const parsePlanFromText = (text: string): PipelinePlan => {
@@ -56,12 +78,7 @@ const parsePlanFromText = (text: string): PipelinePlan => {
 			return { steps: [], reasoning: "Invalid plan: steps is not an array" };
 		}
 
-		const validSteps = ["data", "chart", "report"];
-		parsed.steps = parsed.steps.filter((s: string) =>
-			validSteps.includes(s as "data" | "chart" | "report"),
-		) as PipelinePlan["steps"];
-
-		return parsed;
+		return normalizePlan(parsed);
 	} catch {
 		return { steps: [], reasoning: "Failed to parse plan JSON" };
 	}
@@ -89,4 +106,9 @@ const runOrchestrator = async (
 	return parsePlanFromText(result.text);
 };
 
-export { parsePlanFromText, runOrchestrator, ORCHESTRATOR_PROMPT };
+export {
+	parsePlanFromText,
+	runOrchestrator,
+	ORCHESTRATOR_PROMPT,
+	canonicalizeSteps,
+};

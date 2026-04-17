@@ -19,7 +19,7 @@ type ManagedDesktopSandbox = {
 	sandboxId: string;
 	vncUrl: string;
 	createdAt: number;
-	timeoutHandle: ReturnType<typeof setTimeout>;
+	timeoutHandle: ReturnType<typeof setTimeout> | null;
 };
 
 type ManagedCodeSandbox = {
@@ -31,239 +31,10 @@ type ManagedCodeSandbox = {
 		title?: string;
 	};
 	syncedFileIds: Set<string>;
-	timeoutHandle: ReturnType<typeof setTimeout>;
+	timeoutHandle: ReturnType<typeof setTimeout> | null;
 };
 
-const desktopStore = new Map<string, ManagedDesktopSandbox>();
-const codeStore = new Map<string, ManagedCodeSandbox>();
-
-const getLatestDesktop = (): ManagedDesktopSandbox | undefined => {
-	if (desktopStore.size === 0) return undefined;
-	const entries = [...desktopStore.values()];
-	return entries[entries.length - 1];
-};
-
-const getLatestCode = (): ManagedCodeSandbox | undefined => {
-	if (codeStore.size === 0) return undefined;
-	const entries = [...codeStore.values()];
-	return entries[entries.length - 1];
-};
-
-const scheduleDesktopCleanup = (sandboxId: string) => {
-	const entry = desktopStore.get(sandboxId);
-	if (!entry) return;
-
-	entry.timeoutHandle = setTimeout(async () => {
-		try {
-			await entry.sandbox.kill();
-		} catch {
-			// sandbox may already be dead
-		}
-		desktopStore.delete(sandboxId);
-	}, SANDBOX_TIMEOUT_MS);
-};
-
-const scheduleCodeCleanup = (sandboxId: string) => {
-	const entry = codeStore.get(sandboxId);
-	if (!entry) return;
-
-	entry.timeoutHandle = setTimeout(async () => {
-		try {
-			await entry.sandbox.kill();
-		} catch {
-			// sandbox may already be dead
-		}
-		codeStore.delete(sandboxId);
-	}, SANDBOX_TIMEOUT_MS);
-};
-
-const createDesktopSandbox = async (
-	opts?: Record<string, unknown>,
-): Promise<{ sandboxId: string; vncUrl: string }> => {
-	const sandbox = await DesktopSandbox.create({
-		apiKey: E2B_API_KEY,
-		resolution: [1024, 720],
-		dpi: 96,
-		timeoutMs: SANDBOX_TIMEOUT_MS,
-		...(opts || {}),
-	});
-
-	const sandboxId = sandbox.sandboxId;
-
-	await sandbox.stream.start({ requireAuth: true });
-	const authKey = sandbox.stream.getAuthKey();
-	const vncUrl = sandbox.stream.getUrl({
-		authKey,
-		autoConnect: true,
-		resize: "remote",
-	});
-
-	desktopStore.set(sandboxId, {
-		sandbox,
-		sandboxId,
-		vncUrl,
-		createdAt: Date.now(),
-		timeoutHandle: undefined as unknown as ReturnType<typeof setTimeout>,
-	});
-
-	scheduleDesktopCleanup(sandboxId);
-
-	return { sandboxId, vncUrl };
-};
-
-const createCodeSandbox = async (
-	opts?: Record<string, unknown>,
-): Promise<{ sandboxId: string }> => {
-	const sandbox = await CodeSandbox.create({
-		apiKey: E2B_API_KEY,
-		timeoutMs: SANDBOX_TIMEOUT_MS,
-		...(opts || {}),
-	});
-
-	const sandboxId = sandbox.sandboxId;
-
-	codeStore.set(sandboxId, {
-		sandbox,
-		sandboxId,
-		createdAt: Date.now(),
-		lastChartArtifact: undefined,
-		syncedFileIds: new Set<string>(),
-		timeoutHandle: undefined as unknown as ReturnType<typeof setTimeout>,
-	});
-
-	scheduleCodeCleanup(sandboxId);
-
-	return { sandboxId };
-};
-
-const getDesktopSandbox = (sandboxId?: string): DesktopSandbox | undefined => {
-	if (sandboxId) return desktopStore.get(sandboxId)?.sandbox;
-	return getLatestDesktop()?.sandbox;
-};
-
-const getCodeSandbox = (sandboxId?: string): CodeSandbox | undefined => {
-	if (sandboxId) return codeStore.get(sandboxId)?.sandbox;
-	return getLatestCode()?.sandbox;
-};
-
-const getCodeSandboxEntry = (
-	sandboxId?: string,
-): ManagedCodeSandbox | undefined => {
-	if (sandboxId) {
-		return codeStore.get(sandboxId);
-	}
-
-	return getLatestCode();
-};
-
-const syncFilesToCodeSandbox = async (
-	fileIds: string[],
-	sandboxId?: string,
-): Promise<void> => {
-	if (fileIds.length === 0) {
-		return;
-	}
-
-	let entry = getCodeSandboxEntry(sandboxId);
-	if (!entry) {
-		await createCodeSandbox();
-		entry = getCodeSandboxEntry();
-	}
-	if (!entry) {
-		throw new Error("No code sandbox available. Create a code sandbox first.");
-	}
-
-	await entry.sandbox.commands.run(`mkdir -p ${CODE_DATA_DIR}`);
-
-	for (const fileId of fileIds) {
-		if (entry.syncedFileIds.has(fileId)) {
-			continue;
-		}
-
-		const { bytes, record } = await getUploadedFileBytes(fileId);
-		const fileBuffer = new ArrayBuffer(bytes.byteLength);
-		new Uint8Array(fileBuffer).set(bytes);
-		await entry.sandbox.files.write(
-			`${CODE_DATA_DIR}/${record.filename}`,
-			fileBuffer,
-		);
-		entry.syncedFileIds.add(fileId);
-	}
-};
-
-const executeCommand = async (
-	cmd: string,
-	sandboxId?: string,
-): Promise<{ stdout: string; stderr: string; exitCode: number }> => {
-	const sb = getDesktopSandbox(sandboxId);
-	if (!sb)
-		throw new Error("No desktop sandbox available. Create a sandbox first.");
-
-	const result = await sb.commands.run(cmd);
-	return {
-		stdout: result.stdout,
-		stderr: result.stderr,
-		exitCode: result.exitCode,
-	};
-};
-
-const persistCodeFile = async ({
-	contentType,
-	filename,
-	filePath,
-	kind,
-	sandboxId,
-}: {
-	contentType?: string;
-	filename?: string;
-	filePath: string;
-	kind?: "dataset" | "document";
-	sandboxId?: string;
-}) => {
-	const entry = getCodeSandboxEntry(sandboxId);
-	if (!entry) {
-		throw new Error("No code sandbox available. Create a code sandbox first.");
-	}
-
-	const fileBytes = (await entry.sandbox.files.read(filePath, {
-		format: "bytes",
-	})) as Uint8Array;
-
-	return storeFileRecordFromBytes({
-		bytes: fileBytes,
-		contentType,
-		filename: filename ?? basename(filePath),
-		kind,
-	});
-};
-
-const persistLatestChart = async ({
-	contentType = "image/png",
-	filename = "chart.png",
-	sandboxId,
-}: {
-	contentType?: string;
-	filename?: string;
-	sandboxId?: string;
-}) => {
-	const entry = getCodeSandboxEntry(sandboxId);
-	if (!entry?.lastChartArtifact?.png) {
-		throw new Error("No chart artifact available. Generate a chart first.");
-	}
-
-	return storeFileRecordFromBytes({
-		bytes: Buffer.from(entry.lastChartArtifact.png, "base64"),
-		contentType,
-		filename,
-		kind: "document",
-	});
-};
-
-const executeCode = async (
-	code: string,
-	sandboxId?: string,
-	fileIds: string[] = [],
-): Promise<{
+type CodeExecutionResult = {
 	text?: string;
 	results: Array<{
 		chart?: Record<string, unknown>;
@@ -281,160 +52,329 @@ const executeCode = async (
 	stdout: string[];
 	stderr: string[];
 	error?: { name: string; value: string; traceback: string };
-}> => {
-	let sb = getCodeSandbox(sandboxId);
-	if (!sb) {
-		await createCodeSandbox();
-		sb = getCodeSandbox();
+};
+
+type PersistedFileInput = {
+	contentType?: string;
+	filename?: string;
+	filePath: string;
+	kind?: "dataset" | "document";
+};
+
+type PersistedChartInput = {
+	contentType?: string;
+	filename?: string;
+};
+
+type SandboxSession = {
+	id: string;
+	createDesktopSandbox: (
+		opts?: Record<string, unknown>,
+	) => Promise<{ sandboxId: string; vncUrl: string }>;
+	executeCommand: (
+		command: string,
+	) => Promise<{ stdout: string; stderr: string; exitCode: number }>;
+	navigateBrowser: (url: string) => Promise<{ url: string; title: string }>;
+	searchWeb: (query: string) => Promise<{
+		query: string;
+		results: Array<{ title: string; snippet: string }>;
+	}>;
+	executeCode: (
+		code: string,
+		fileIds?: string[],
+	) => Promise<CodeExecutionResult>;
+	persistCodeFile: (
+		input: PersistedFileInput,
+	) => Promise<Awaited<ReturnType<typeof storeFileRecordFromBytes>>>;
+	persistLatestChart: (
+		input?: PersistedChartInput,
+	) => Promise<Awaited<ReturnType<typeof storeFileRecordFromBytes>>>;
+	cleanup: () => Promise<void>;
+};
+
+const clearTimer = (timeoutHandle: ReturnType<typeof setTimeout> | null) => {
+	if (timeoutHandle) {
+		clearTimeout(timeoutHandle);
 	}
-	if (!sb)
-		throw new Error("No code sandbox available. Create a code sandbox first.");
-
-	await syncFilesToCodeSandbox(fileIds, sandboxId);
-
-	const execution = await sb.runCode(code);
-	const entry = getCodeSandboxEntry(sandboxId);
-	const latestChartResult = execution.results.find((result) => result.png);
-
-	if (entry) {
-		entry.lastChartArtifact = latestChartResult?.png
-			? {
-					png: latestChartResult.png,
-					title:
-						typeof latestChartResult.chart?.title === "string"
-							? latestChartResult.chart.title
-							: latestChartResult.text,
-				}
-			: entry.lastChartArtifact;
-	}
-
-	return {
-		text: execution.text,
-		results: execution.results.map((r) => ({
-			chart: r.chart as Record<string, unknown> | undefined,
-			data: r.data,
-			text: r.text,
-			html: r.html,
-			jpeg: r.jpeg,
-			json: r.json,
-			latex: r.latex,
-			markdown: r.markdown,
-			pdf: r.pdf,
-			png: r.png,
-			svg: r.svg,
-		})),
-		stdout: execution.logs.stdout,
-		stderr: execution.logs.stderr,
-		error: execution.error
-			? {
-					name: execution.error.name,
-					value: execution.error.value,
-					traceback: execution.error.traceback,
-				}
-			: undefined,
-	};
 };
 
-const navigateBrowser = async (
-	url: string,
-	sandboxId?: string,
-): Promise<{ url: string; title: string }> => {
-	const sb = getDesktopSandbox(sandboxId);
-	if (!sb)
-		throw new Error(
-			"No desktop sandbox available. You MUST call createDesktopSandbox first.",
-		);
-
-	await sb.open(url);
-	await sb.wait(3000);
-
-	return { url, title: `Navigated to ${url}` };
-};
-
-const searchWeb = async (
-	query: string,
-	sandboxId?: string,
-): Promise<{
-	query: string;
-	results: Array<{ title: string; snippet: string }>;
-}> => {
-	const sb = getDesktopSandbox(sandboxId);
-
-	if (!sb)
-		throw new Error(
-			"No desktop sandbox available. You MUST call createDesktopSandbox first.",
-		);
-
-	await sb.launch(
-		"google-chrome",
-		`https://www.google.com/search?q=${encodeURIComponent(query)}`,
-	);
-	await sb.wait(5000);
-
-	const screenshot = await sb.screenshot("bytes");
-	const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
-
-	return {
-		query,
-		results: [
-			{
-				title: `Searched for: ${query}`,
-				snippet: `Browser opened at ${searchUrl}. Screenshot captured (${screenshot.byteLength} bytes). View the VNC stream for visual results.`,
-			},
-		],
-	};
-};
-
-const cleanup = async (sandboxId?: string) => {
-	if (sandboxId) {
-		const desktopEntry = desktopStore.get(sandboxId);
-		if (desktopEntry) {
-			clearTimeout(desktopEntry.timeoutHandle);
-			await desktopEntry.sandbox.kill();
-			desktopStore.delete(sandboxId);
-		}
-
-		const codeEntry = codeStore.get(sandboxId);
-		if (codeEntry) {
-			clearTimeout(codeEntry.timeoutHandle);
-			await codeEntry.sandbox.kill();
-			codeStore.delete(sandboxId);
-		}
+const killDesktopSandbox = async (entry: ManagedDesktopSandbox | undefined) => {
+	if (!entry) {
 		return;
 	}
 
-	for (const [id, entry] of desktopStore) {
-		clearTimeout(entry.timeoutHandle);
-		try {
-			await entry.sandbox.kill();
-		} catch {
-			// ignore
-		}
-		desktopStore.delete(id);
-	}
+	clearTimer(entry.timeoutHandle);
+	entry.timeoutHandle = null;
 
-	for (const [id, entry] of codeStore) {
-		clearTimeout(entry.timeoutHandle);
-		try {
-			await entry.sandbox.kill();
-		} catch {
-			// ignore
-		}
-		codeStore.delete(id);
+	try {
+		await entry.sandbox.kill();
+	} catch {
+		// sandbox may already be dead
 	}
 };
 
-export {
-	createDesktopSandbox,
-	createCodeSandbox,
-	getDesktopSandbox,
-	getCodeSandbox,
-	executeCommand,
-	executeCode,
-	navigateBrowser,
-	persistCodeFile,
-	persistLatestChart,
-	searchWeb,
-	syncFilesToCodeSandbox,
-	cleanup,
+const killCodeSandbox = async (entry: ManagedCodeSandbox | undefined) => {
+	if (!entry) {
+		return;
+	}
+
+	clearTimer(entry.timeoutHandle);
+	entry.timeoutHandle = null;
+
+	try {
+		await entry.sandbox.kill();
+	} catch {
+		// sandbox may already be dead
+	}
 };
+
+const createManagedDesktopSandbox = async (
+	opts?: Record<string, unknown>,
+): Promise<ManagedDesktopSandbox> => {
+	const sandbox = await DesktopSandbox.create({
+		apiKey: E2B_API_KEY,
+		resolution: [1024, 720],
+		dpi: 96,
+		timeoutMs: SANDBOX_TIMEOUT_MS,
+		...(opts || {}),
+	});
+
+	await sandbox.stream.start({ requireAuth: true });
+	const authKey = sandbox.stream.getAuthKey();
+
+	return {
+		sandbox,
+		sandboxId: sandbox.sandboxId,
+		vncUrl: sandbox.stream.getUrl({
+			authKey,
+			autoConnect: true,
+			resize: "remote",
+		}),
+		createdAt: Date.now(),
+		timeoutHandle: null,
+	};
+};
+
+const createManagedCodeSandbox = async (
+	opts?: Record<string, unknown>,
+): Promise<ManagedCodeSandbox> => {
+	const sandbox = await CodeSandbox.create({
+		apiKey: E2B_API_KEY,
+		timeoutMs: SANDBOX_TIMEOUT_MS,
+		...(opts || {}),
+	});
+
+	return {
+		sandbox,
+		sandboxId: sandbox.sandboxId,
+		createdAt: Date.now(),
+		lastChartArtifact: undefined,
+		syncedFileIds: new Set<string>(),
+		timeoutHandle: null,
+	};
+};
+
+const createSandboxSession = (): SandboxSession => {
+	const id = crypto.randomUUID();
+	let desktopEntry: ManagedDesktopSandbox | undefined;
+	let codeEntry: ManagedCodeSandbox | undefined;
+
+	const scheduleDesktopCleanup = (entry: ManagedDesktopSandbox) => {
+		clearTimer(entry.timeoutHandle);
+		entry.timeoutHandle = setTimeout(async () => {
+			if (desktopEntry?.sandboxId === entry.sandboxId) {
+				await killDesktopSandbox(entry);
+				desktopEntry = undefined;
+			}
+		}, SANDBOX_TIMEOUT_MS);
+	};
+
+	const scheduleCodeCleanup = (entry: ManagedCodeSandbox) => {
+		clearTimer(entry.timeoutHandle);
+		entry.timeoutHandle = setTimeout(async () => {
+			if (codeEntry?.sandboxId === entry.sandboxId) {
+				await killCodeSandbox(entry);
+				codeEntry = undefined;
+			}
+		}, SANDBOX_TIMEOUT_MS);
+	};
+
+	const ensureDesktopSandbox = async (opts?: Record<string, unknown>) => {
+		if (!desktopEntry) {
+			desktopEntry = await createManagedDesktopSandbox(opts);
+		}
+
+		scheduleDesktopCleanup(desktopEntry);
+		return desktopEntry;
+	};
+
+	const ensureCodeSandbox = async (opts?: Record<string, unknown>) => {
+		if (!codeEntry) {
+			codeEntry = await createManagedCodeSandbox(opts);
+		}
+
+		scheduleCodeCleanup(codeEntry);
+		return codeEntry;
+	};
+
+	const syncFilesToCodeSandbox = async (fileIds: string[]) => {
+		if (fileIds.length === 0) {
+			return;
+		}
+
+		const entry = await ensureCodeSandbox();
+		await entry.sandbox.commands.run(`mkdir -p ${CODE_DATA_DIR}`);
+
+		for (const fileId of fileIds) {
+			if (entry.syncedFileIds.has(fileId)) {
+				continue;
+			}
+
+			const { bytes, record } = await getUploadedFileBytes(fileId);
+			const fileBuffer = new ArrayBuffer(bytes.byteLength);
+			new Uint8Array(fileBuffer).set(bytes);
+			await entry.sandbox.files.write(
+				`${CODE_DATA_DIR}/${record.filename}`,
+				fileBuffer,
+			);
+			entry.syncedFileIds.add(fileId);
+		}
+	};
+
+	return {
+		id,
+		createDesktopSandbox: async (opts?: Record<string, unknown>) => {
+			const entry = await ensureDesktopSandbox(opts);
+
+			return {
+				sandboxId: entry.sandboxId,
+				vncUrl: entry.vncUrl,
+			};
+		},
+		executeCommand: async (command: string) => {
+			const entry = await ensureDesktopSandbox();
+			const result = await entry.sandbox.commands.run(command);
+
+			return {
+				stdout: result.stdout,
+				stderr: result.stderr,
+				exitCode: result.exitCode,
+			};
+		},
+		navigateBrowser: async (url: string) => {
+			const entry = await ensureDesktopSandbox();
+			await entry.sandbox.open(url);
+			await entry.sandbox.wait(3000);
+
+			return { url, title: `Navigated to ${url}` };
+		},
+		searchWeb: async (query: string) => {
+			const entry = await ensureDesktopSandbox();
+			const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+
+			await entry.sandbox.launch("google-chrome", searchUrl);
+			await entry.sandbox.wait(5000);
+
+			const screenshot = await entry.sandbox.screenshot("bytes");
+
+			return {
+				query,
+				results: [
+					{
+						title: `Searched for: ${query}`,
+						snippet: `Browser opened at ${searchUrl}. Screenshot captured (${screenshot.byteLength} bytes). View the VNC stream for visual results.`,
+					},
+				],
+			};
+		},
+		executeCode: async (
+			code: string,
+			fileIds: string[] = [],
+		): Promise<CodeExecutionResult> => {
+			const entry = await ensureCodeSandbox();
+			await syncFilesToCodeSandbox(fileIds);
+
+			const execution = await entry.sandbox.runCode(code);
+			const latestChartResult = execution.results.find((result) => result.png);
+
+			entry.lastChartArtifact = latestChartResult?.png
+				? {
+						png: latestChartResult.png,
+						title:
+							typeof latestChartResult.chart?.title === "string"
+								? latestChartResult.chart.title
+								: latestChartResult.text,
+					}
+				: entry.lastChartArtifact;
+
+			return {
+				text: execution.text,
+				results: execution.results.map((result) => ({
+					chart: result.chart as Record<string, unknown> | undefined,
+					data: result.data,
+					text: result.text,
+					html: result.html,
+					jpeg: result.jpeg,
+					json: result.json,
+					latex: result.latex,
+					markdown: result.markdown,
+					pdf: result.pdf,
+					png: result.png,
+					svg: result.svg,
+				})),
+				stdout: execution.logs.stdout,
+				stderr: execution.logs.stderr,
+				error: execution.error
+					? {
+							name: execution.error.name,
+							value: execution.error.value,
+							traceback: execution.error.traceback,
+						}
+					: undefined,
+			};
+		},
+		persistCodeFile: async ({
+			contentType,
+			filename,
+			filePath,
+			kind,
+		}: PersistedFileInput) => {
+			const entry = await ensureCodeSandbox();
+			const fileBytes = (await entry.sandbox.files.read(filePath, {
+				format: "bytes",
+			})) as Uint8Array;
+
+			return storeFileRecordFromBytes({
+				bytes: fileBytes,
+				contentType,
+				filename: filename ?? basename(filePath),
+				kind,
+			});
+		},
+		persistLatestChart: async ({
+			contentType = "image/png",
+			filename = "chart.png",
+		}: PersistedChartInput = {}) => {
+			const entry = await ensureCodeSandbox();
+			if (!entry.lastChartArtifact?.png) {
+				throw new Error("No chart artifact available. Generate a chart first.");
+			}
+
+			return storeFileRecordFromBytes({
+				bytes: Buffer.from(entry.lastChartArtifact.png, "base64"),
+				contentType,
+				filename,
+				kind: "document",
+			});
+		},
+		cleanup: async () => {
+			await killDesktopSandbox(desktopEntry);
+			await killCodeSandbox(codeEntry);
+			desktopEntry = undefined;
+			codeEntry = undefined;
+		},
+	};
+};
+
+export { CODE_DATA_DIR, createSandboxSession };
+export type { SandboxSession, CodeExecutionResult };

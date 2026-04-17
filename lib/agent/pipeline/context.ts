@@ -1,9 +1,9 @@
+import type { FileRecord } from "@/types";
 import type {
 	PipelineContext,
 	PipelinePlan,
 	PipelineStep,
-} from "@/lib/agent/agents/types";
-import type { FileRecord } from "@/types";
+} from "@/types/agent";
 
 const formatAttachedFiles = (attachedFiles: FileRecord[]) => {
 	if (attachedFiles.length === 0) {

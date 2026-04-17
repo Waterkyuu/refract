@@ -1,3 +1,4 @@
+import type { SandboxSession } from "@/lib/e2b";
 import {
 	createCodeInterpreterTool,
 	createPersistLatestChartTool,
@@ -5,11 +6,15 @@ import {
 
 type ChartToolsOptions = {
 	fileIds?: string[];
+	sandboxSession: SandboxSession;
 };
 
-const createChartTools = ({ fileIds = [] }: ChartToolsOptions = {}) => ({
-	codeInterpreter: createCodeInterpreterTool({ fileIds }),
-	persistLatestChart: createPersistLatestChartTool(),
+const createChartTools = ({
+	fileIds = [],
+	sandboxSession,
+}: ChartToolsOptions) => ({
+	codeInterpreter: createCodeInterpreterTool({ fileIds, sandboxSession }),
+	persistLatestChart: createPersistLatestChartTool(sandboxSession),
 });
 
 export { createChartTools };

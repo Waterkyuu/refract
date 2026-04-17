@@ -1,265 +1,99 @@
 import { findSkill, getSkills } from "@/lib/agent/skills";
-import {
-	createDesktopSandbox,
-	executeCode,
-	executeCommand,
-	navigateBrowser,
-	persistCodeFile,
-	persistLatestChart,
-	searchWeb,
-} from "@/lib/e2b";
+import type { SandboxSession } from "@/lib/e2b";
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
+import {
+	createCodeInterpreterTool,
+	createPersistCodeFileTool,
+	createPersistLatestChartTool,
+} from "./tools/shared";
 
 type CreateChatToolsOptions = {
 	fileIds?: string[];
+	sandboxSession: SandboxSession;
 };
 
-const createSandboxTool = tool({
-	description:
-		"Create an E2B Desktop Sandbox with a full Ubuntu desktop and browser. Returns a VNC URL for viewing the remote desktop. Use this when the user needs browser automation or visual desktop interaction.",
-	inputSchema: zodSchema(
-		z.object({
-			task: z
-				.string()
-				.describe("Description of what the agent needs to do in the sandbox"),
-		}),
-	),
-	execute: async ({ task }: { task: string }) => {
-		try {
-			const { sandboxId, vncUrl } = await createDesktopSandbox();
+const createSandboxTool = (sandboxSession: SandboxSession) =>
+	tool({
+		description:
+			"Create an E2B Desktop Sandbox with a full Ubuntu desktop and browser. Returns a VNC URL for viewing the remote desktop. Use this when the user needs browser automation or visual desktop interaction.",
+		inputSchema: zodSchema(
+			z.object({
+				task: z
+					.string()
+					.describe("Description of what the agent needs to do in the sandbox"),
+			}),
+		),
+		execute: async ({ task }: { task: string }) => {
+			const { sandboxId, vncUrl } = await sandboxSession.createDesktopSandbox();
 
 			return {
 				sandboxId,
 				vncUrl,
-				status: "running",
+				status: "running" as const,
 				message: `Sandbox created for task: ${task}`,
 			};
-		} catch (error) {
-			return {
-				status: "error",
-				message:
-					error instanceof Error ? error.message : "Failed to create sandbox",
-			};
-		}
-	},
-});
+		},
+	});
 
-const executeShellTool = tool({
-	description:
-		"Execute a shell command in the desktop sandbox. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
-	inputSchema: zodSchema(
-		z.object({
-			command: z.string().describe("Shell command to execute in the sandbox"),
-		}),
-	),
-	execute: async ({ command }: { command: string }) => {
-		try {
-			const result = await executeCommand(command);
+const executeShellTool = (sandboxSession: SandboxSession) =>
+	tool({
+		description:
+			"Execute a shell command in the desktop sandbox. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
+		inputSchema: zodSchema(
+			z.object({
+				command: z.string().describe("Shell command to execute in the sandbox"),
+			}),
+		),
+		execute: async ({ command }: { command: string }) => {
+			const result = await sandboxSession.executeCommand(command);
 
 			return {
-				status: "success",
+				status: "success" as const,
 				stdout: result.stdout,
 				stderr: result.stderr,
 				exitCode: result.exitCode,
 			};
-		} catch (error) {
-			return {
-				status: "error",
-				message:
-					error instanceof Error ? error.message : "Command execution failed",
-			};
-		}
-	},
-});
+		},
+	});
 
-const navigateBrowserTool = tool({
-	description:
-		"Open a URL in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
-	inputSchema: zodSchema(
-		z.object({
-			url: z.string().describe("URL to navigate to"),
-		}),
-	),
-	execute: async ({ url }: { url: string }) => {
-		try {
-			const result = await navigateBrowser(url);
+const navigateBrowserTool = (sandboxSession: SandboxSession) =>
+	tool({
+		description:
+			"Open a URL in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
+		inputSchema: zodSchema(
+			z.object({
+				url: z.string().describe("URL to navigate to"),
+			}),
+		),
+		execute: async ({ url }: { url: string }) => {
+			const result = await sandboxSession.navigateBrowser(url);
 
 			return {
-				status: "success",
+				status: "success" as const,
 				url: result.url,
 				message: result.title,
 			};
-		} catch (error) {
-			return {
-				status: "error",
-				message: error instanceof Error ? error.message : "Navigation failed",
-			};
-		}
-	},
-});
+		},
+	});
 
-const searchWebTool = tool({
-	description:
-		"Search the web by opening Google in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
-	inputSchema: zodSchema(
-		z.object({
-			query: z.string().describe("Search query"),
-		}),
-	),
-	execute: async ({ query }: { query: string }) => {
-		try {
-			const result = await searchWeb(query);
+const searchWebTool = (sandboxSession: SandboxSession) =>
+	tool({
+		description:
+			"Search the web by opening Google in the desktop sandbox browser. IMPORTANT: You MUST call createSandbox before using this tool, otherwise it will fail.",
+		inputSchema: zodSchema(
+			z.object({
+				query: z.string().describe("Search query"),
+			}),
+		),
+		execute: async ({ query }: { query: string }) => {
+			const result = await sandboxSession.searchWeb(query);
 
 			return {
-				status: "success",
+				status: "success" as const,
 				query: result.query,
 				results: result.results,
 			};
-		} catch (error) {
-			return {
-				status: "error",
-				message: error instanceof Error ? error.message : "Search failed",
-			};
-		}
-	},
-});
-
-const persistCodeFileTool = tool({
-	description:
-		"Persist a file generated inside the code interpreter sandbox to storage. Use this after creating a cleaned CSV or another analysis output file. Returns a downloadable file reference and dataset preview when applicable.",
-	inputSchema: zodSchema(
-		z.object({
-			contentType: z
-				.string()
-				.optional()
-				.describe("MIME type of the exported file"),
-			filename: z
-				.string()
-				.optional()
-				.describe("Optional output filename shown to the user"),
-			filePath: z
-				.string()
-				.describe("Absolute file path inside the code interpreter sandbox"),
-			kind: z
-				.enum(["dataset", "document"])
-				.optional()
-				.describe("Semantic kind of the exported file"),
-		}),
-	),
-	execute: async ({
-		contentType,
-		filename,
-		filePath,
-		kind,
-	}: {
-		contentType?: string;
-		filename?: string;
-		filePath: string;
-		kind?: "dataset" | "document";
-	}) => {
-		try {
-			const record = await persistCodeFile({
-				contentType,
-				filename,
-				filePath,
-				kind,
-			});
-
-			return {
-				contentType: record.contentType,
-				downloadUrl: `/api/file/${record.id}/download`,
-				fileId: record.id,
-				filename: record.filename,
-				kind: record.kind,
-				preview: record.preview,
-				status: "success",
-			};
-		} catch (error) {
-			return {
-				status: "error",
-				message:
-					error instanceof Error ? error.message : "Failed to persist file",
-			};
-		}
-	},
-});
-
-const persistLatestChartTool = tool({
-	description:
-		"Persist the latest chart image generated by the code interpreter to storage. Use this when the user wants to keep or download the chart artifact after analysis.",
-	inputSchema: zodSchema(
-		z.object({
-			contentType: z
-				.string()
-				.optional()
-				.describe("MIME type of the chart file"),
-			filename: z
-				.string()
-				.optional()
-				.describe("Optional output filename shown to the user"),
-		}),
-	),
-	execute: async ({
-		contentType,
-		filename,
-	}: {
-		contentType?: string;
-		filename?: string;
-	}) => {
-		try {
-			const record = await persistLatestChart({
-				contentType,
-				filename,
-			});
-
-			return {
-				contentType: record.contentType,
-				downloadUrl: `/api/file/${record.id}/download`,
-				fileId: record.id,
-				filename: record.filename,
-				status: "success",
-			};
-		} catch (error) {
-			return {
-				status: "error",
-				message:
-					error instanceof Error ? error.message : "Failed to persist chart",
-			};
-		}
-	},
-});
-
-const createCodeInterpreterTool = ({
-	fileIds = [],
-}: CreateChatToolsOptions = {}) =>
-	tool({
-		description:
-			"Execute Python code in an isolated Jupyter notebook sandbox. Use for data analysis, calculations, chart generation, and any Python computation. Each call runs in a notebook cell, so variables persist between calls.",
-		inputSchema: zodSchema(
-			z.object({
-				code: z.string().describe("Python code to execute in a notebook cell"),
-			}),
-		),
-		execute: async ({ code }: { code: string }) => {
-			try {
-				const result = await executeCode(code, undefined, fileIds);
-
-				return {
-					status: result.error ? "error" : "success",
-					text: result.text,
-					results: result.results,
-					stdout: result.stdout,
-					stderr: result.stderr,
-					error: result.error,
-				};
-			} catch (error) {
-				return {
-					status: "error",
-					message:
-						error instanceof Error ? error.message : "Code execution failed",
-				};
-			}
 		},
 	});
 
@@ -277,31 +111,31 @@ const loadSkillTool = tool({
 			return `Loaded skill: ${skill.name}\n\n${skill.content}`;
 		}
 		const available = getSkills()
-			.map((s) => s.name)
+			.map((skillItem) => skillItem.name)
 			.join(", ");
 		return `Skill '${skill_name}' not found. Available skills: ${available}`;
 	},
 });
 
-const createChatTools = ({ fileIds = [] }: CreateChatToolsOptions = {}) => ({
-	createSandbox: createSandboxTool,
-	codeInterpreter: createCodeInterpreterTool({ fileIds }),
-	executeShell: executeShellTool,
+const createChatTools = ({
+	fileIds = [],
+	sandboxSession,
+}: CreateChatToolsOptions) => ({
+	createSandbox: createSandboxTool(sandboxSession),
+	codeInterpreter: createCodeInterpreterTool({ fileIds, sandboxSession }),
+	executeShell: executeShellTool(sandboxSession),
 	loadSkill: loadSkillTool,
-	navigateBrowser: navigateBrowserTool,
-	persistCodeFile: persistCodeFileTool,
-	persistLatestChart: persistLatestChartTool,
-	searchWeb: searchWebTool,
+	navigateBrowser: navigateBrowserTool(sandboxSession),
+	persistCodeFile: createPersistCodeFileTool(sandboxSession),
+	persistLatestChart: createPersistLatestChartTool(sandboxSession),
+	searchWeb: searchWebTool(sandboxSession),
 });
 
 export {
 	createChatTools,
-	createCodeInterpreterTool,
 	createSandboxTool,
 	executeShellTool,
 	loadSkillTool,
 	navigateBrowserTool,
-	persistCodeFileTool,
-	persistLatestChartTool,
 	searchWebTool,
 };
