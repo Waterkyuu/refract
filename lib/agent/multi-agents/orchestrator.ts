@@ -40,6 +40,7 @@ If the request does not need any pipeline stage, respond with:
 const FAST_MODEL = process.env.GLM_FAST_MODEL ?? "glm-4.7-flash";
 
 const canonicalizeSteps = (steps: string[]): PipelinePlan["steps"] => {
+	// Keep only known stages, then enforce dependency and execution order in one place.
 	const requestedSteps = new Set(
 		steps.filter((step): step is PipelinePlan["steps"][number] =>
 			STEP_ORDER.includes(step as (typeof STEP_ORDER)[number]),
@@ -61,6 +62,7 @@ const normalizePlan = (plan: PipelinePlan): PipelinePlan => ({
 
 // Extract the text returned by the JSON from the LLM
 const parsePlanFromText = (text: string): PipelinePlan => {
+	// The model may wrap JSON in prose/markdown, so extract the broadest object containing "steps".
 	const jsonMatch = text.match(/\{[\s\S]*"steps"[\s\S]*\}/);
 	if (!jsonMatch) {
 		if (text.includes("{") && text.includes('"steps"')) {

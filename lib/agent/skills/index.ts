@@ -12,6 +12,7 @@ const parseFrontmatter = (
 ): { name: string; description: string; content: string } => {
 	const lines = raw.split("\n");
 
+	// Only parse YAML-like frontmatter when the file starts with a fence.
 	if (lines.length < 2 || lines[0]?.trim() !== "---") {
 		return { name: "", description: "", content: raw };
 	}
@@ -84,6 +85,7 @@ const loadAllSkills = (): Skill[] => {
 let cachedSkills: Skill[] | null = null;
 
 const getSkills = (): Skill[] => {
+	// Cache skill files in-process to avoid repeated disk I/O on every tool call.
 	if (!cachedSkills) {
 		cachedSkills = loadAllSkills();
 	}

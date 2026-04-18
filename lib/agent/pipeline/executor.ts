@@ -75,6 +75,7 @@ const RelaxedReportOutputSchema = ReportOutputSchema.omit({
 	artifact: PersistedArtifactSchema.optional(),
 });
 
+// Collect balanced JSON objects from noisy model/tool text while ignoring braces inside quoted strings.
 const extractJsonCandidates = (text: string): string[] => {
 	const candidates: string[] = [];
 	let start = -1;
@@ -134,6 +135,7 @@ const parseStructuredOutput = <T>(
 ): T | undefined => {
 	const candidates = extractJsonCandidates(text);
 
+	// Prefer the last valid object because agents can emit scratch JSON before the final payload.
 	for (let index = candidates.length - 1; index >= 0; index -= 1) {
 		try {
 			const parsed = JSON.parse(candidates[index] ?? "");
@@ -153,6 +155,7 @@ const parseStructuredOutputFromTexts = <T>(
 	texts: string[],
 	schema: z.ZodSchema<T>,
 ): T | undefined => {
+	// Probe multiple text sources (assistant text + tool outputs) until one satisfies the schema.
 	for (const text of texts) {
 		const parsed = parseStructuredOutput(text, schema);
 		if (parsed) {
@@ -166,6 +169,7 @@ const parseStructuredOutputFromTexts = <T>(
 const extractTextCandidatesFromToolResults = (
 	toolResults: StepToolResult[],
 ): string[] =>
+	// Tool outputs are heterogeneous; normalize likely text-bearing fields into one candidate list.
 	toolResults.flatMap(({ output }) => {
 		if (!output || typeof output !== "object") {
 			return [];
@@ -182,6 +186,7 @@ const extractTextCandidatesFromToolResults = (
 
 			if (candidate && typeof candidate === "object") {
 				try {
+					// Structured outputs can still carry JSON content useful for downstream parsing.
 					textCandidates.push(JSON.stringify(candidate));
 				} catch {
 					// ignore non-serializable values
@@ -294,6 +299,7 @@ const resolveDataOutput = (stepResult: StepExecutionResult): DataOutput => {
 		textCandidates,
 		BestEffortDataOutputSchema,
 	);
+	// Artifact resolution is intentionally defensive: final JSON, best-effort JSON, then raw tool output fallbacks.
 	const artifact =
 		parsedOutput?.artifact ??
 		bestEffortOutput?.artifact ??
@@ -364,6 +370,7 @@ const resolveChartOutput = (stepResult: StepExecutionResult): ChartOutput => {
 		stepResult.toolResults,
 		"persistLatestChart",
 	);
+	// Prefer persisted chart artifacts from tool calls because they are guaranteed to be downloadable records.
 	const outputArtifacts =
 		artifacts.length > 0
 			? artifacts
@@ -442,6 +449,7 @@ const executeStep = async (
 	const toolErrors: string[] = [];
 	const toolResults: StepToolResult[] = [];
 
+	// Stream parts arrive interleaved (text/tool events), so we aggregate them into one deterministic step result.
 	for await (const part of result.fullStream) {
 		switch (part.type) {
 			case "text-delta":
@@ -524,6 +532,7 @@ const executePipeline = async (
 				}
 			}
 		} catch (error) {
+			// Fail fast on the first stage failure to avoid cascading outputs from partial context.
 			const message =
 				error instanceof Error
 					? formatStepFailure(error, stepResult?.toolErrors ?? [])
