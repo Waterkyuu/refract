@@ -71,10 +71,13 @@ refract/
 ├── constants/                  # Static constants
 ├── hooks/                      # Custom React hooks
 ├── i18n/                       # Internationalization (i18n) setup
-├── lib/                        # Utility functions & helpers
+├── lib/                        # Utility functions & helpers & agent design
 ├── messages/                   # Translation JSON files
 ├── public/                     # Static assets (images, SVGs)
 ├── services/                   # API service layer
 ├── styles/                     # Global CSS styles
 └── types/                      # TypeScript type definitions
+└── tests/                      # Test
+│   └── e2e/                    # E2E test
+│   └── integration/            # Integration test
 ```
