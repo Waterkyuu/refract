@@ -23,7 +23,7 @@ type AssistantMessageProps = {
 };
 
 const MESSAGE_COLLAPSE_TEXT_LIMIT = 1800;
-const SANDBOX_LOCAL_PATH_PREFIXES = ["/home/user/", "/mnt/data/"];
+const SANDBOX_LOCAL_PATH_PREFIXES = ["/home/user/"];
 
 const isSandboxLocalPath = (value?: string | null) =>
 	Boolean(

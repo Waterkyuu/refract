@@ -14,8 +14,8 @@ import {
 	resolveDataOutput,
 	resolveReportOutput,
 } from "@/lib/agent/pipeline/output-resolver";
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { formatUnknownError } from "@/lib/agent/utils/error-utils";
-import type { SandboxSession } from "@/lib/e2b";
 import type { FileRecord } from "@/types";
 import type {
 	AgentDefinition,

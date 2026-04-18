@@ -1,5 +1,5 @@
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { createReportTools } from "@/lib/agent/tools/report-tools";
-import type { SandboxSession } from "@/lib/e2b";
 import type { AgentDefinition } from "@/types/agent";
 
 const REPORT_AGENT_PROMPT = `You are a technical report writer. Your job is to:

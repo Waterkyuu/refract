@@ -2,7 +2,10 @@ import { basename } from "node:path/posix";
 import { formatSandboxOperationError } from "@/lib/agent/utils/error-utils";
 import { Sandbox as CodeSandbox } from "@e2b/code-interpreter";
 import { Sandbox as DesktopSandbox } from "@e2b/desktop";
-import { getUploadedFileBytes, storeFileRecordFromBytes } from "./file-store";
+import {
+	getUploadedFileBytes,
+	storeFileRecordFromBytes,
+} from "../../file-store";
 
 const E2B_API_KEY = process.env.E2B_API_KEY;
 

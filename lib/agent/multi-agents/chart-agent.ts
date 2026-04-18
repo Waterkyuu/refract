@@ -1,5 +1,5 @@
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { createChartTools } from "@/lib/agent/tools/chart-tools";
-import type { SandboxSession } from "@/lib/e2b";
 import type { AgentDefinition } from "@/types/agent";
 
 const CHART_AGENT_PROMPT = `You are a data visualization specialist. Your job is to:

@@ -1,4 +1,4 @@
-import type { SandboxSession } from "@/lib/e2b";
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { createCodeInterpreterTool, createPersistCodeFileTool } from "./shared";
 
 type DataToolsOptions = {

@@ -1,8 +1,8 @@
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import {
 	formatCodeExecutionError,
 	formatSandboxOperationError,
 } from "@/lib/agent/utils/error-utils";
-import type { SandboxSession } from "@/lib/e2b";
 import { tool, zodSchema } from "ai";
 import { z } from "zod";
 

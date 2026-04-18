@@ -1,5 +1,5 @@
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { createLoadSkillTool } from "@/lib/agent/tools/skill-tools";
-import type { SandboxSession } from "@/lib/e2b";
 import { createCodeInterpreterTool, createPersistCodeFileTool } from "./shared";
 
 const createReportTools = (sandboxSession: SandboxSession) => ({

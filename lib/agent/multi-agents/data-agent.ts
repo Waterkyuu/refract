@@ -1,5 +1,5 @@
+import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { createDataTools } from "@/lib/agent/tools/data-tools";
-import type { SandboxSession } from "@/lib/e2b";
 import type { AgentDefinition } from "@/types/agent";
 
 const DATA_AGENT_PROMPT = `You are a data engineering specialist. Your job is to:
