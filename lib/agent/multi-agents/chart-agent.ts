@@ -15,9 +15,9 @@ IMPORTANT RULES:
 - Do NOT use /mnt/data/ or /home/user/*.png as output paths
 - Do NOT include raw local filesystem image links or markdown image syntax in your final text response
 - Persist each chart you want to keep with persistLatestChart instead of referencing local file paths
-- If any chart title, axis label, legend, or annotation contains Chinese, set matplotlib before plotting:
-  plt.rcParams['font.sans-serif'] = ['SimHei']
-  plt.rcParams['axes.unicode_minus'] = False
+- All visible chart text MUST be English only (titles, axis labels, legends, annotations, and tick labels)
+- If source column names or categories are Chinese, create English aliases for display before plotting
+- Do NOT configure Chinese fonts (e.g., SimHei); enforce English labels instead
 - Make charts publication-ready: proper DPI (150+), clear labels, no overlapping text
 - Generate each chart in a separate code cell for clarity
 - Your FINAL response must be EXACTLY ONE JSON object and nothing else (no markdown fences, no explanation text before/after JSON).
