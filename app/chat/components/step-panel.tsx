@@ -34,8 +34,6 @@ const STEP_CONFIG: Record<
 	},
 };
 
-const DEFAULT_STEP_ORDER: PipelineStep[] = ["data", "chart", "report"];
-
 const STATUS_CONFIG: Record<
 	StepStatus,
 	{
@@ -69,8 +67,7 @@ const STATUS_CONFIG: Record<
 const DebugPanel = memo(() => {
 	const { currentStep, plan, stepStatus } = useAtomValue(pipelineAtom);
 	const [isOpen, setIsOpen] = useState(false);
-	const displaySteps =
-		plan && plan.steps.length > 0 ? plan.steps : DEFAULT_STEP_ORDER;
+	const displaySteps = plan?.steps ?? [];
 	const handleToggle = useCallback(() => {
 		setIsOpen((previousValue) => !previousValue);
 	}, []);

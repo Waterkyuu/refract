@@ -29,6 +29,19 @@ const buildPipelineState = (
 });
 
 describe("StepPanel", () => {
+	it("renders no steps while waiting for orchestrator plan", () => {
+		mockedUseAtomValue.mockReturnValue(buildPipelineState());
+
+		render(<StepPanel />);
+
+		fireEvent.click(screen.getByRole("button", { name: /Pipeline Steps/i }));
+
+		expect(screen.getByText("0/0 completed")).toBeInTheDocument();
+		expect(screen.queryByText("Data")).not.toBeInTheDocument();
+		expect(screen.queryByText("Chart")).not.toBeInTheDocument();
+		expect(screen.queryByText("Report")).not.toBeInTheDocument();
+	});
+
 	it("renders only orchestrator planned steps", () => {
 		mockedUseAtomValue.mockReturnValue(
 			buildPipelineState({
