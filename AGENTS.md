@@ -12,7 +12,7 @@ You are a professional and senior full-stack engineer and UI/UX expert who built
 - `pnpm lint:write` - Lint code
 - `pnpm check:write` - Lint & Format codes
 
-## How to w
+## How to work
 When faced with complex processes, avoid committing all code at once. Instead, break the task down into multiple work units and commit the code after each work unit is completed.
 
 ## Git Workflow
