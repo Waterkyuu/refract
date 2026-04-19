@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
-import Markdown from "react-markdown";
+import Markdown, { type Components } from "react-markdown";
 
 type AssistantMessageProps = {
 	message: UIMessage;
@@ -193,8 +193,95 @@ const ToolCallBlock = memo(
 	},
 );
 
-const TextBlock = memo(({ text }: { text: string }) => {
+type TextMarkdownCodeProps = Parameters<NonNullable<Components["code"]>>[0];
+type TextMarkdownPreProps = Parameters<NonNullable<Components["pre"]>>[0];
+type TextMarkdownTableProps = Parameters<NonNullable<Components["table"]>>[0];
+type TextMarkdownAnchorProps = Parameters<NonNullable<Components["a"]>>[0];
+type TextMarkdownImageProps = Parameters<NonNullable<Components["img"]>>[0];
+
+const TextMarkdownCode = ({ className, ...props }: TextMarkdownCodeProps) => (
+	<code {...props} className={cn("whitespace-pre-wrap break-all", className)} />
+);
+
+const TextMarkdownPre = ({ children, ...props }: TextMarkdownPreProps) => (
+	<pre
+		{...props}
+		className="max-w-full overflow-x-auto whitespace-pre-wrap break-words"
+	>
+		{children}
+	</pre>
+);
+
+const TextMarkdownTable = ({ children, ...props }: TextMarkdownTableProps) => (
+	<div className="max-w-full overflow-x-auto">
+		<table {...props}>{children}</table>
+	</div>
+);
+
+const TextMarkdownAnchor = ({
+	children,
+	href,
+	...props
+}: TextMarkdownAnchorProps) => {
+	const stringHref = typeof href === "string" ? href : undefined;
+
+	if (isSandboxLocalPath(stringHref)) {
+		return (
+			<code className="break-all rounded bg-background/70 px-1 py-0.5 text-[0.85em]">
+				{stringHref}
+			</code>
+		);
+	}
+
+	return (
+		<a {...props} href={stringHref}>
+			{children}
+		</a>
+	);
+};
+
+const TextMarkdownImage = ({ alt, src, ...props }: TextMarkdownImageProps) => {
+	const stringSrc = typeof src === "string" ? src : undefined;
+
+	if (isSandboxLocalPath(stringSrc)) {
+		return (
+			<code className="break-all rounded bg-background/70 px-1 py-0.5 text-[0.85em]">
+				{alt ? `${alt}: ${stringSrc}` : stringSrc}
+			</code>
+		);
+	}
+
+	return (
+		<img
+			{...props}
+			alt={alt ?? ""}
+			className="max-w-full rounded-lg"
+			src={stringSrc}
+		/>
+	);
+};
+
+const TEXT_BLOCK_MARKDOWN_COMPONENTS: Components = {
+	code: TextMarkdownCode,
+	pre: TextMarkdownPre,
+	table: TextMarkdownTable,
+	a: TextMarkdownAnchor,
+	img: TextMarkdownImage,
+};
+
+const TextBlockMarkdown = memo(({ text }: { text: string }) => {
 	const deferredText = useDeferredValue(text);
+
+	return (
+		<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
+			<Markdown components={TEXT_BLOCK_MARKDOWN_COMPONENTS}>
+				{deferredText}
+			</Markdown>
+		</div>
+	);
+});
+
+const TextBlock = memo(({ text }: { text: string }) => {
 	const t = useTranslations("message");
 	const [isExpanded, setIsExpanded] = useState(false);
 	const shouldCollapse = text.length > MESSAGE_COLLAPSE_TEXT_LIMIT;
@@ -211,69 +298,7 @@ const TextBlock = memo(({ text }: { text: string }) => {
 					shouldCollapse && !isExpanded && "max-h-96",
 				)}
 			>
-				<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
-					<Markdown
-						components={{
-							code: ({ className, ...props }) => (
-								<code
-									{...props}
-									className={cn("whitespace-pre-wrap break-all", className)}
-								/>
-							),
-							pre: ({ children, ...props }) => (
-								<pre
-									{...props}
-									className="max-w-full overflow-x-auto whitespace-pre-wrap break-words"
-								>
-									{children}
-								</pre>
-							),
-							table: ({ children, ...props }) => (
-								<div className="max-w-full overflow-x-auto">
-									<table {...props}>{children}</table>
-								</div>
-							),
-							a: ({ children, href, ...props }) => {
-								const stringHref = typeof href === "string" ? href : undefined;
-
-								if (isSandboxLocalPath(stringHref)) {
-									return (
-										<code className="break-all rounded bg-background/70 px-1 py-0.5 text-[0.85em]">
-											{stringHref}
-										</code>
-									);
-								}
-
-								return (
-									<a {...props} href={stringHref}>
-										{children}
-									</a>
-								);
-							},
-							img: ({ alt, src }) => {
-								const stringSrc = typeof src === "string" ? src : undefined;
-
-								if (isSandboxLocalPath(stringSrc)) {
-									return (
-										<code className="break-all rounded bg-background/70 px-1 py-0.5 text-[0.85em]">
-											{alt ? `${alt}: ${stringSrc}` : stringSrc}
-										</code>
-									);
-								}
-
-								return (
-									<img
-										alt={alt ?? ""}
-										className="max-w-full rounded-lg"
-										src={stringSrc}
-									/>
-								);
-							},
-						}}
-					>
-						{deferredText}
-					</Markdown>
-				</div>
+				<TextBlockMarkdown text={text} />
 			</div>
 
 			{shouldCollapse && !isExpanded && (
