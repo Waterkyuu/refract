@@ -10,6 +10,11 @@
 			"source": "yizhiyanhua-ai/fireworks-tech-graph",
 			"sourceType": "github",
 			"computedHash": "c050331c01796e03b59f5d4a33edf11122308f2eabf047bb7e6d5903d1728894"
+		},
+		"karpathy-guidelines": {
+			"source": "forrestchang/andrej-karpathy-skills",
+			"sourceType": "github",
+			"computedHash": "0ec1641120accbb458780e0bd19a50a4182f2b97863e90851b91307f29802c9f"
 		}
 	}
 }
