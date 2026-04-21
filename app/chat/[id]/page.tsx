@@ -15,6 +15,7 @@ import {
 	workspaceChartAtom,
 	workspaceDatasetAtom,
 	workspaceFileAtom,
+	workspaceViewAtom,
 } from "@/atoms/chat";
 import Header from "@/components/share/header";
 import InputField from "@/components/share/input-field";
@@ -33,6 +34,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import usePipelineChat from "@/hooks/use-pipeline-chat";
 import {
 	type WorkspaceRoundArtifact,
+	type WorkspaceSnapshot,
 	deriveWorkspaceSnapshotFromMessages,
 	getFileDownloadUrl,
 	getFileExtension,
@@ -43,6 +45,7 @@ import {
 	useCreateSession,
 	useSaveMessages,
 } from "@/services/chat";
+import type { WorkspaceView } from "@/types";
 import type { ChatAttachment } from "@/types/chat";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Monitor } from "lucide-react";
@@ -56,6 +59,34 @@ type ChatPageProps = {
 	params: Promise<{ id: string }>;
 };
 
+const canKeepWorkspaceView = (
+	view: WorkspaceView,
+	snapshot: WorkspaceSnapshot,
+) => {
+	switch (view) {
+		case "chart":
+			return Boolean(snapshot.chart);
+		case "dataset":
+			return Boolean(snapshot.dataset);
+		case "file":
+			return Boolean(snapshot.file);
+		case "typst":
+			return snapshot.typstContent.length > 0;
+		case "vnc":
+			return snapshot.vncUrl.length > 0;
+		default:
+			return false;
+	}
+};
+
+const preserveSelectedWorkspaceView = (
+	snapshot: WorkspaceSnapshot,
+	currentView: WorkspaceView,
+): WorkspaceSnapshot =>
+	canKeepWorkspaceView(currentView, snapshot)
+		? { ...snapshot, view: currentView }
+		: snapshot;
+
 const ChatPage = ({ params }: ChatPageProps) => {
 	const [sessionId, setSessionId] = useState<string>("");
 	const [vncSheetOpen, setVncSheetOpen] = useState(false);
@@ -68,6 +99,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 	const workspaceChart = useAtomValue(workspaceChartAtom);
 	const workspaceDataset = useAtomValue(workspaceDatasetAtom);
 	const workspaceFile = useAtomValue(workspaceFileAtom);
+	const workspaceView = useAtomValue(workspaceViewAtom);
 	const setActiveWorkspaceSession = useSetAtom(setActiveWorkspaceSessionAtom);
 	const setWorkspaceHydrating = useSetAtom(setWorkspaceHydratingAtom);
 	const setWorkspaceSnapshotForSession = useSetAtom(
@@ -125,7 +157,10 @@ const ChatPage = ({ params }: ChatPageProps) => {
 			return;
 		}
 
-		const snapshot = deriveWorkspaceSnapshotFromMessages(historyMessages);
+		const snapshot = preserveSelectedWorkspaceView(
+			deriveWorkspaceSnapshotFromMessages(historyMessages),
+			workspaceView,
+		);
 		setWorkspaceSnapshotForSession({ sessionId, snapshot });
 		setWorkspaceHydrating({ sessionId, hydrating: false });
 	}, [
@@ -134,6 +169,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		sessionId,
 		setWorkspaceHydrating,
 		setWorkspaceSnapshotForSession,
+		workspaceView,
 	]);
 
 	useEffect(() => {
@@ -141,9 +177,18 @@ const ChatPage = ({ params }: ChatPageProps) => {
 			return;
 		}
 
-		const snapshot = deriveWorkspaceSnapshotFromMessages(messages);
+		const snapshot = preserveSelectedWorkspaceView(
+			deriveWorkspaceSnapshotFromMessages(messages),
+			workspaceView,
+		);
 		setWorkspaceSnapshotForSession({ sessionId, snapshot });
-	}, [historyLoading, messages, sessionId, setWorkspaceSnapshotForSession]);
+	}, [
+		historyLoading,
+		messages,
+		sessionId,
+		setWorkspaceSnapshotForSession,
+		workspaceView,
+	]);
 
 	useEffect(() => {
 		if (firstInputSentRef.current) return;

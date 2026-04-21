@@ -9,7 +9,8 @@ import {
 	workspaceTypstContentAtom,
 	workspaceViewAtom,
 } from "@/atoms/chat";
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
+import type { UIMessage } from "ai";
 import type { ReactNode } from "react";
 import ChatPage from "./page";
 
@@ -19,6 +20,11 @@ const mockSaveMessages = jest.fn();
 const mockSetInput = jest.fn();
 const mockAppend = jest.fn(async () => {});
 const mockStop = jest.fn();
+const mockPipelineState: {
+	messages: UIMessage[];
+} = {
+	messages: [],
+};
 
 jest.mock("@/hooks/use-mobile", () => ({
 	useIsMobile: () => false,
@@ -27,7 +33,7 @@ jest.mock("@/hooks/use-mobile", () => ({
 jest.mock("@/hooks/use-pipeline-chat", () => ({
 	__esModule: true,
 	default: () => ({
-		messages: [],
+		messages: mockPipelineState.messages,
 		input: "",
 		setInput: mockSetInput,
 		append: mockAppend,
@@ -95,6 +101,7 @@ describe("ChatPage workspace reset", () => {
 		mockSetInput.mockReset();
 		mockAppend.mockClear();
 		mockStop.mockClear();
+		mockPipelineState.messages = [];
 
 		jotaiStore.set(vncUrlAtom, "https://old-vnc.example");
 		jotaiStore.set(workspaceViewAtom, "chart");
@@ -132,5 +139,88 @@ describe("ChatPage workspace reset", () => {
 			expect(jotaiStore.get(workspaceFileAtom)).toBeNull();
 			expect(jotaiStore.get(workspaceTypstContentAtom)).toBe("");
 		});
+	});
+
+	it("preserves the user-selected workspace tab while streaming updates continue", async () => {
+		const initialStreamingMessages: UIMessage[] = [
+			{
+				id: "assistant-stream-1",
+				role: "assistant",
+				parts: [
+					{ type: "text", text: "Working on the analysis" },
+					{
+						type: "artifact",
+						category: "data",
+						fileId: "dataset-1",
+						filename: "cleaned.csv",
+						extension: "csv",
+						kind: "dataset",
+						downloadUrl: "https://public.example/cleaned.csv",
+					},
+					{
+						type: "artifact",
+						category: "chart",
+						fileId: "chart-1",
+						filename: "trend.png",
+						extension: "png",
+						downloadUrl: "https://public.example/trend.png",
+					},
+				],
+			},
+		];
+
+		mockPipelineState.messages = initialStreamingMessages;
+
+		const { rerender } = render(
+			<ChatPage params={Promise.resolve({ id: "session-stream" })} />,
+		);
+
+		await waitFor(() => {
+			expect(jotaiStore.get(workspaceDatasetAtom)?.fileId).toBe("dataset-1");
+			expect(jotaiStore.get(workspaceChartAtom)?.fileId).toBe("chart-1");
+			expect(jotaiStore.get(workspaceViewAtom)).toBe("chart");
+		});
+
+		act(() => {
+			jotaiStore.set(workspaceViewAtom, "dataset");
+		});
+		expect(jotaiStore.get(workspaceViewAtom)).toBe("dataset");
+
+		act(() => {
+			mockPipelineState.messages = [
+				{
+					...initialStreamingMessages[0],
+					id: "assistant-stream-2",
+					parts: [
+						{ type: "text", text: "Still streaming more details" },
+						{
+							type: "artifact",
+							category: "data",
+							fileId: "dataset-1",
+							filename: "cleaned.csv",
+							extension: "csv",
+							kind: "dataset",
+							downloadUrl: "https://public.example/cleaned.csv",
+						},
+						{
+							type: "artifact",
+							category: "chart",
+							fileId: "chart-2",
+							filename: "trend-v2.png",
+							extension: "png",
+							downloadUrl: "https://public.example/trend-v2.png",
+						},
+					],
+				},
+			];
+
+			rerender(<ChatPage params={Promise.resolve({ id: "session-stream" })} />);
+		});
+
+		await waitFor(() => {
+			expect(jotaiStore.get(workspaceChartAtom)?.fileId).toBe("chart-2");
+		});
+
+		expect(jotaiStore.get(workspaceViewAtom)).toBe("dataset");
 	});
 });
