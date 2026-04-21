@@ -1,7 +1,4 @@
-"use client";
-
 import { useTranslations } from "next-intl";
-import { memo } from "react";
 
 const Footer = () => {
 	const t = useTranslations("footer");
@@ -40,4 +37,4 @@ const Footer = () => {
 	);
 };
 
-export default memo(Footer);
+export default Footer;
