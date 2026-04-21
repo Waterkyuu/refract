@@ -37,6 +37,9 @@ const MessageArea = ({
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const previousLastMessageRef = useRef<UIMessage | undefined>(undefined);
 	const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+	const [thinkingTimesByMessageId, setThinkingTimesByMessageId] = useState<
+		Record<string, number>
+	>({});
 
 	const isNearBottom = (element: HTMLDivElement) => {
 		const distanceToBottom =
@@ -81,6 +84,32 @@ const MessageArea = ({
 	}, [messages]);
 
 	useEffect(() => {
+		if (messages.length === 0) {
+			setThinkingTimesByMessageId({});
+		}
+	}, [messages.length]);
+
+	useEffect(() => {
+		const latestAssistantMessage = [...messages]
+			.reverse()
+			.find((message) => message.role === "assistant");
+		if (!latestAssistantMessage || thinkingTime == null) {
+			return;
+		}
+
+		setThinkingTimesByMessageId((currentTimes) => {
+			if (currentTimes[latestAssistantMessage.id] === thinkingTime) {
+				return currentTimes;
+			}
+
+			return {
+				...currentTimes,
+				[latestAssistantMessage.id]: thinkingTime,
+			};
+		});
+	}, [messages, thinkingTime]);
+
+	useEffect(() => {
 		if (!isAutoScrollEnabled || isHistoryLoading) {
 			return;
 		}
@@ -123,7 +152,11 @@ const MessageArea = ({
 						<MessageItem
 							key={message.id}
 							message={message}
-							thinkingTime={message.role === "assistant" ? thinkingTime : null}
+							thinkingTime={
+								message.role === "assistant"
+									? (thinkingTimesByMessageId[message.id] ?? null)
+									: null
+							}
 							hasToolCalls={hasToolCalls}
 							onSelectAttachment={onSelectAttachment}
 							onSelectRoundArtifact={onSelectRoundArtifact}

@@ -5,8 +5,19 @@ import MessageArea from "./message-area";
 
 jest.mock("./message-item", () => ({
 	__esModule: true,
-	default: ({ message }: { message: UIMessage }) => (
-		<div>{message.parts.find((part) => part.type === "text")?.text}</div>
+	default: ({
+		message,
+		thinkingTime,
+	}: {
+		message: UIMessage;
+		thinkingTime: number | null;
+	}) => (
+		<div>
+			<span>{message.parts.find((part) => part.type === "text")?.text}</span>
+			<span data-testid={`thinking-${message.id}`}>
+				{thinkingTime == null ? "none" : thinkingTime.toFixed(1)}
+			</span>
+		</div>
 	),
 }));
 
@@ -95,5 +106,39 @@ describe("MessageArea history loading", () => {
 		expect(
 			screen.getByRole("button", { name: "Jump to latest" }),
 		).toBeVisible();
+	});
+
+	it("keeps per-message thinking times stable when a newer assistant message completes", () => {
+		const firstAssistantMessage = makeTextMessage(
+			"assistant-1",
+			"assistant",
+			"First response",
+		);
+		const secondAssistantMessage = makeTextMessage(
+			"assistant-2",
+			"assistant",
+			"Second response",
+		);
+
+		const { rerender } = render(
+			<MessageArea
+				messages={[firstAssistantMessage]}
+				thinkingTime={3}
+				className="min-h-0 flex-1"
+			/>,
+		);
+
+		expect(screen.getByTestId("thinking-assistant-1")).toHaveTextContent("3.0");
+
+		rerender(
+			<MessageArea
+				messages={[firstAssistantMessage, secondAssistantMessage]}
+				thinkingTime={2}
+				className="min-h-0 flex-1"
+			/>,
+		);
+
+		expect(screen.getByTestId("thinking-assistant-1")).toHaveTextContent("3.0");
+		expect(screen.getByTestId("thinking-assistant-2")).toHaveTextContent("2.0");
 	});
 });
