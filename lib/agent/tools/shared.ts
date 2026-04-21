@@ -11,6 +11,7 @@ type CodeInterpreterOptions = {
 	sandboxSession: SandboxSession;
 };
 
+// Wraps sandbox Python execution with normalized success/error payloads.
 const createCodeInterpreterTool = ({
 	fileIds = [],
 	sandboxSession,
@@ -34,6 +35,7 @@ const createCodeInterpreterTool = ({
 			}
 
 			if (result.error) {
+				// Surface Python runtime failures with stdout/stderr context for debugging.
 				throw new Error(
 					formatCodeExecutionError({
 						error: result.error,
@@ -53,6 +55,7 @@ const createCodeInterpreterTool = ({
 		},
 	});
 
+// Persists a generated sandbox file and returns frontend-friendly metadata.
 const createPersistCodeFileTool = (sandboxSession: SandboxSession) =>
 	tool({
 		description:
@@ -95,6 +98,7 @@ const createPersistCodeFileTool = (sandboxSession: SandboxSession) =>
 			});
 
 			return {
+				// Keep URL construction centralized so callers only need fileId metadata.
 				contentType: record.contentType,
 				downloadUrl: `/api/file/${record.id}/download`,
 				fileId: record.id,
@@ -106,6 +110,7 @@ const createPersistCodeFileTool = (sandboxSession: SandboxSession) =>
 		},
 	});
 
+// Persists the latest chart artifact captured by the code sandbox session.
 const createPersistLatestChartTool = (sandboxSession: SandboxSession) =>
 	tool({
 		description:
