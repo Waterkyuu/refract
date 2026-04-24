@@ -52,7 +52,50 @@ type UsePipelineChatReturn = {
 	stop: () => void;
 };
 
+type TextPipelinePart = {
+	type: "text";
+	text: string;
+};
+
+type ToolPipelinePart = {
+	type: string;
+	toolCallId: string;
+	state: string;
+	input?: unknown;
+	output?: unknown;
+	errorText?: string;
+};
+
+type ArtifactPipelinePart = {
+	type: "artifact";
+	fileId: string;
+	filename: string;
+	extension: string;
+	fileSize?: number;
+	category?: "data" | "chart" | "report";
+	kind?: string;
+	downloadUrl?: string;
+	title?: string;
+	toolCallId?: string;
+};
+
+type ReasoningPipelinePart = {
+	type: "reasoning";
+	text: string;
+	durationSeconds?: number;
+};
+
+type PipelinePart =
+	| TextPipelinePart
+	| ReasoningPipelinePart
+	| ToolPipelinePart
+	| ArtifactPipelinePart;
+
 const STREAM_RENDER_THROTTLE_MS = 80;
+
+const isReasoningPipelinePart = (
+	part: PipelinePart | undefined,
+): part is ReasoningPipelinePart => part?.type === "reasoning";
 
 const createAuthAwareChatFetch = (
 	fetchImpl: typeof fetch = fetch,
@@ -290,44 +333,6 @@ const usePipelineChat = (
 		status === "streaming" ||
 		pipelineStatus === "submitted" ||
 		pipelineStatus === "streaming";
-
-	type ToolPipelinePart = {
-		type: string;
-		toolCallId: string;
-		state: string;
-		input?: unknown;
-		output?: unknown;
-		errorText?: string;
-	};
-
-	type ArtifactPart = {
-		type: "artifact";
-		fileId: string;
-		filename: string;
-		extension: string;
-		fileSize?: number;
-		category?: "data" | "chart" | "report";
-		kind?: string;
-		downloadUrl?: string;
-		title?: string;
-		toolCallId?: string;
-	};
-
-	type ReasoningPipelinePart = {
-		type: "reasoning";
-		text: string;
-		durationSeconds?: number;
-	};
-
-	type PipelinePart =
-		| { type: "text"; text: string }
-		| ReasoningPipelinePart
-		| ToolPipelinePart
-		| ArtifactPart;
-
-	const isReasoningPipelinePart = (
-		part: PipelinePart | undefined,
-	): part is ReasoningPipelinePart => part?.type === "reasoning";
 
 	const processPipelineStream = async (
 		response: Response,
