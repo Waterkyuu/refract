@@ -15,6 +15,10 @@ IMPORTANT RULES:
 - Do NOT use /mnt/data/ or /home/user/*.png as output paths
 - Do NOT include raw local filesystem image links or markdown image syntax in your final text response
 - Persist each chart you want to keep with persistLatestChart instead of referencing local file paths
+- Immediately call persistLatestChart after generating each chart you intend to keep
+- Do NOT wait until the end of the step to persist charts
+- Before printing the final JSON, verify every chart you intend to keep has a persisted artifact with fileId, filename, and downloadUrl
+- If a chart was generated but not yet persisted, stop and persist it before continuing
 - All visible chart text MUST be English only (titles, axis labels, legends, annotations, and tick labels)
 - If source column names or categories are Chinese, create English aliases for display before plotting
 - Do NOT configure Chinese fonts (e.g., SimHei); enforce English labels instead
