@@ -127,13 +127,21 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		[saveMessages, sessionId],
 	);
 
-	const { messages, input, setInput, append, isLoading, stop, thinkingTime } =
-		usePipelineChat({
-			api: "/api/chat",
-			sessionId,
-			initialMessages,
-			onFinish,
-		});
+	const {
+		messages,
+		input,
+		setInput,
+		append,
+		isLoading,
+		stop,
+		thinkingTime,
+		assistantThinkingTimeByMessageId,
+	} = usePipelineChat({
+		api: "/api/chat",
+		sessionId,
+		initialMessages,
+		onFinish,
+	});
 
 	const hasPendingFirstInput =
 		Boolean(jotaiStore.get(pendingHomePromptAtom)) || firstInputSentRef.current;
@@ -364,6 +372,7 @@ const ChatPage = ({ params }: ChatPageProps) => {
 					<MessageArea
 						messages={messages}
 						thinkingTime={thinkingTime}
+						assistantThinkingTimeByMessageId={assistantThinkingTimeByMessageId}
 						isLoading={showPendingStreamState}
 						isHistoryLoading={isHistoryHydrating}
 						className="min-h-0 flex-1"
@@ -414,6 +423,9 @@ const ChatPage = ({ params }: ChatPageProps) => {
 							<MessageArea
 								messages={messages}
 								thinkingTime={thinkingTime}
+								assistantThinkingTimeByMessageId={
+									assistantThinkingTimeByMessageId
+								}
 								isLoading={showPendingStreamState}
 								isHistoryLoading={isHistoryHydrating}
 								className="min-h-0 flex-1"

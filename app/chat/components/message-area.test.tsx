@@ -8,26 +8,15 @@ jest.mock("./message-item", () => ({
 	default: ({
 		message,
 		thinkingTime,
-		reasoningThinkingTimesByPartIndex,
 	}: {
 		message: UIMessage;
 		thinkingTime: number | null;
-		reasoningThinkingTimesByPartIndex?: Record<number, number>;
 	}) => (
 		<div>
 			<span>{message.parts.find((part) => part.type === "text")?.text}</span>
 			<span data-testid={`thinking-${message.id}`}>
 				{thinkingTime == null ? "none" : thinkingTime.toFixed(1)}
 			</span>
-			{message.parts.map((part, index) =>
-				part.type === "reasoning" ? (
-					<span data-testid={`reasoning-${message.id}-${index}`} key={index}>
-						{reasoningThinkingTimesByPartIndex?.[index] == null
-							? "none"
-							: reasoningThinkingTimesByPartIndex[index]?.toFixed(1)}
-					</span>
-				) : null,
-			)}
 		</div>
 	),
 }));
@@ -117,97 +106,5 @@ describe("MessageArea history loading", () => {
 		expect(
 			screen.getByRole("button", { name: "Jump to latest" }),
 		).toBeVisible();
-	});
-
-	it("keeps per-message thinking times stable when a newer assistant message completes", () => {
-		const firstAssistantMessage = makeTextMessage(
-			"assistant-1",
-			"assistant",
-			"First response",
-		);
-		const secondAssistantMessage = makeTextMessage(
-			"assistant-2",
-			"assistant",
-			"Second response",
-		);
-
-		const { rerender } = render(
-			<MessageArea
-				messages={[firstAssistantMessage]}
-				thinkingTime={3}
-				className="min-h-0 flex-1"
-			/>,
-		);
-
-		expect(screen.getByTestId("thinking-assistant-1")).toHaveTextContent("3.0");
-
-		rerender(
-			<MessageArea
-				messages={[firstAssistantMessage, secondAssistantMessage]}
-				thinkingTime={2}
-				className="min-h-0 flex-1"
-			/>,
-		);
-
-		expect(screen.getByTestId("thinking-assistant-1")).toHaveTextContent("3.0");
-		expect(screen.getByTestId("thinking-assistant-2")).toHaveTextContent("2.0");
-	});
-
-	it("keeps each reasoning block's thinking time independent inside the same assistant message", () => {
-		const firstReasoningMessage: UIMessage = {
-			id: "assistant-reasoning-1",
-			role: "assistant",
-			parts: [
-				{
-					type: "reasoning",
-					text: "Inspecting the first issue",
-				},
-				{
-					type: "text",
-					text: "First issue handled.",
-				},
-			],
-		};
-		const updatedReasoningMessage: UIMessage = {
-			...firstReasoningMessage,
-			parts: [
-				...firstReasoningMessage.parts,
-				{
-					type: "reasoning",
-					text: "Inspecting the second issue",
-				},
-				{
-					type: "text",
-					text: "Second issue handled.",
-				},
-			],
-		};
-
-		const { rerender } = render(
-			<MessageArea
-				messages={[firstReasoningMessage]}
-				thinkingTime={3}
-				className="min-h-0 flex-1"
-			/>,
-		);
-
-		expect(
-			screen.getByTestId("reasoning-assistant-reasoning-1-0"),
-		).toHaveTextContent("3.0");
-
-		rerender(
-			<MessageArea
-				messages={[updatedReasoningMessage]}
-				thinkingTime={2}
-				className="min-h-0 flex-1"
-			/>,
-		);
-
-		expect(
-			screen.getByTestId("reasoning-assistant-reasoning-1-0"),
-		).toHaveTextContent("3.0");
-		expect(
-			screen.getByTestId("reasoning-assistant-reasoning-1-2"),
-		).toHaveTextContent("2.0");
 	});
 });

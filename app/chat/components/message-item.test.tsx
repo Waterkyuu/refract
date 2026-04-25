@@ -30,6 +30,7 @@ const reasoningMessage: UIMessage = {
 		{
 			type: "reasoning",
 			text: "I am analyzing the dataset.",
+			durationSeconds: 1.2,
 		},
 		{
 			type: "text",
@@ -45,6 +46,7 @@ const multiReasoningMessage: UIMessage = {
 		{
 			type: "reasoning",
 			text: "I am checking the first issue.",
+			durationSeconds: 1.2,
 		},
 		{
 			type: "text",
@@ -53,6 +55,7 @@ const multiReasoningMessage: UIMessage = {
 		{
 			type: "reasoning",
 			text: "I am checking the second issue.",
+			durationSeconds: 2.4,
 		},
 		{
 			type: "text",
@@ -83,7 +86,7 @@ describe("MessageItem tool details", () => {
 		render(
 			<MessageItem
 				message={reasoningMessage}
-				thinkingTime={1.2}
+				thinkingTime={null}
 				hasToolCalls={false}
 			/>,
 		);
@@ -97,8 +100,7 @@ describe("MessageItem tool details", () => {
 		render(
 			<MessageItem
 				message={multiReasoningMessage}
-				thinkingTime={2.4}
-				reasoningThinkingTimesByPartIndex={{ 0: 1.2, 2: 2.4 }}
+				thinkingTime={null}
 				hasToolCalls={false}
 			/>,
 		);

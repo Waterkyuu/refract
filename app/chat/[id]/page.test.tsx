@@ -40,6 +40,7 @@ jest.mock("@/hooks/use-pipeline-chat", () => ({
 		isLoading: false,
 		stop: mockStop,
 		thinkingTime: null,
+		assistantThinkingTimeByMessageId: {},
 	}),
 }));
 

@@ -8,7 +8,6 @@ import UserMessage from "./user-message";
 type MessageItemProps = {
 	message: UIMessage;
 	thinkingTime: number | null;
-	reasoningThinkingTimesByPartIndex?: Record<number, number>;
 	hasToolCalls: boolean;
 	onSelectAttachment?: (attachment: ChatAttachment) => void;
 	onSelectRoundArtifact?: (artifact: WorkspaceRoundArtifact) => void;
@@ -19,7 +18,6 @@ const MessageItem = memo(
 	({
 		message,
 		thinkingTime,
-		reasoningThinkingTimesByPartIndex,
 		onSelectAttachment,
 		onSelectRoundArtifact,
 		onShowVnc,
@@ -37,7 +35,6 @@ const MessageItem = memo(
 			<AssistantMessage
 				message={message}
 				thinkingTime={thinkingTime}
-				reasoningThinkingTimesByPartIndex={reasoningThinkingTimesByPartIndex}
 				onSelectAttachment={onSelectAttachment}
 				onSelectRoundArtifact={onSelectRoundArtifact}
 				onShowVnc={onShowVnc}

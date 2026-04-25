@@ -25,17 +25,21 @@ When faced with complex processes, avoid committing all code at once. Instead, b
 - Please execute these terminal commands directly; do not ask if you need to commit.
 
 ## Code Style/Quality   
-- Comments are in English.
+- Keep comments in code English only.
 - Add necessary comments wherever the logic is complex.
 - Add specific input/output examples to complex functions.
 - Write maintainable and readable code. Code should not be redundant.
 - When rendering multiple similar UI components, a data-driven approach must be used.
-- Keep don't repeat yourself.
+- Prefer existing patterns/components over introducing parallel abstractions.
+- Match the existing file structure and naming conventions of the directory you are editing. Do not introduce a one-off file extension, naming style, or folder pattern when neighboring files already establish a clear convention.
 - Use `type` instead of `interface` for type definitions whenever possible. If the type needs to be validated, use `zod` to generate the type.
 - Avoid using `any`, use `unknown` when necessary.
 - Use arrow function to write typescript
 - Don't add emojis to my documents.
 - Shared business rules or path-building logic must have a single source of truth. If the same helper or string-building rule is needed in multiple files, extract it to a shared module instead of copying the same implementation.
+- Shared container components (pages, lists, panels, wrappers) must not own role-specific or subtype-specific business state. If logic only applies to assistant messages, tool calls, or another narrow subtype, move it into a dedicated hook/helper close to that domain and pass resolved data downward.
+- Do not write large anonymous state-updater callbacks inside components to mix pruning, derivation, and business rules in one block. Extract pure helper functions or a dedicated hook first, then keep the component body focused on rendering and wiring.
+- Do not write more than 3 levels of nested if-else statements.
 - Use destructuring assignment for object properties to improve code readability and reduce redundancy.
 - If the code is similar and repetitive, use array mapping instead of repeatedly writing similar code.
 - Whenever possible, place logic related to a component within the component's file, or encapsulate it and then import it into the component file.

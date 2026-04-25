@@ -1,11 +1,5 @@
 "use client";
 
-import {
-	findLastCompletedReasoningPartIndexWithoutTime,
-	getReasoningDurationSeconds,
-	getRenderableMessageParts,
-	isReasoningMessagePart,
-} from "@/lib/chat/reasoning-timing";
 import type { WorkspaceRoundArtifact } from "@/lib/chat/workspace-hydration";
 import { cn } from "@/lib/utils";
 import type { ChatAttachment } from "@/types/chat";
@@ -21,29 +15,21 @@ type MessageAreaProps = {
 	thinkingTime: number | null;
 	className?: string;
 	isLoading?: boolean;
+	assistantThinkingTimeByMessageId?: Record<string, number | null>;
 	onSelectAttachment?: (attachment: ChatAttachment) => void;
 	onSelectRoundArtifact?: (artifact: WorkspaceRoundArtifact) => void;
 	onShowVnc?: () => void;
 	isHistoryLoading?: boolean;
 };
 
-type MessageThinkingState = {
-	messageTime: number | null;
-	reasoningThinkingTimesByPartIndex: Record<number, number>;
-};
-
 const AUTO_SCROLL_THRESHOLD = 80;
-
-const createMessageThinkingState = (): MessageThinkingState => ({
-	messageTime: null,
-	reasoningThinkingTimesByPartIndex: {},
-});
 
 const MessageArea = ({
 	messages,
 	thinkingTime,
 	className,
 	isLoading = false,
+	assistantThinkingTimeByMessageId,
 	onSelectAttachment,
 	onSelectRoundArtifact,
 	onShowVnc,
@@ -53,9 +39,6 @@ const MessageArea = ({
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 	const previousLastMessageRef = useRef<UIMessage | undefined>(undefined);
 	const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
-	const [thinkingStateByMessageId, setThinkingStateByMessageId] = useState<
-		Record<string, MessageThinkingState>
-	>({});
 
 	const isNearBottom = (element: HTMLDivElement) => {
 		const distanceToBottom =
@@ -98,114 +81,6 @@ const MessageArea = ({
 
 		previousLastMessageRef.current = lastMessage;
 	}, [messages]);
-
-	useEffect(() => {
-		if (messages.length === 0) {
-			setThinkingStateByMessageId({});
-		}
-	}, [messages.length]);
-
-	useEffect(() => {
-		const latestAssistantMessage = [...messages]
-			.reverse()
-			.find((message) => message.role === "assistant");
-		if (!latestAssistantMessage) {
-			return;
-		}
-
-		setThinkingStateByMessageId((currentStateByMessageId) => {
-			const assistantMessageIds = new Set(
-				messages
-					.filter((message) => message.role === "assistant")
-					.map((message) => message.id),
-			);
-			const nextStateByMessageId = Object.fromEntries(
-				Object.entries(currentStateByMessageId).filter(([messageId]) =>
-					assistantMessageIds.has(messageId),
-				),
-			);
-			let hasChanges =
-				Object.keys(nextStateByMessageId).length !==
-				Object.keys(currentStateByMessageId).length;
-
-			for (const message of messages) {
-				if (message.role !== "assistant") {
-					continue;
-				}
-
-				const previousMessageState =
-					nextStateByMessageId[message.id] ?? createMessageThinkingState();
-				const renderableParts = getRenderableMessageParts(message);
-				let nextReasoningThinkingTimesByPartIndex =
-					previousMessageState.reasoningThinkingTimesByPartIndex;
-				let reasoningTimesChanged = false;
-
-				for (const [partIndex, part] of renderableParts.entries()) {
-					if (!isReasoningMessagePart(part)) {
-						continue;
-					}
-
-					const durationSeconds = getReasoningDurationSeconds(part);
-					if (
-						durationSeconds == null ||
-						nextReasoningThinkingTimesByPartIndex[partIndex] === durationSeconds
-					) {
-						continue;
-					}
-
-					if (!reasoningTimesChanged) {
-						nextReasoningThinkingTimesByPartIndex = {
-							...nextReasoningThinkingTimesByPartIndex,
-						};
-						reasoningTimesChanged = true;
-					}
-
-					nextReasoningThinkingTimesByPartIndex[partIndex] = durationSeconds;
-				}
-
-				if (message.id === latestAssistantMessage.id && thinkingTime != null) {
-					const latestCompletedReasoningPartIndex =
-						findLastCompletedReasoningPartIndexWithoutTime(
-							renderableParts,
-							nextReasoningThinkingTimesByPartIndex,
-						);
-
-					if (latestCompletedReasoningPartIndex != null) {
-						if (!reasoningTimesChanged) {
-							nextReasoningThinkingTimesByPartIndex = {
-								...nextReasoningThinkingTimesByPartIndex,
-							};
-							reasoningTimesChanged = true;
-						}
-
-						nextReasoningThinkingTimesByPartIndex[
-							latestCompletedReasoningPartIndex
-						] = thinkingTime;
-					}
-				}
-
-				const nextMessageTime =
-					message.id === latestAssistantMessage.id && thinkingTime != null
-						? thinkingTime
-						: previousMessageState.messageTime;
-
-				if (
-					reasoningTimesChanged ||
-					nextMessageTime !== previousMessageState.messageTime ||
-					nextStateByMessageId[message.id] == null
-				) {
-					nextStateByMessageId[message.id] = {
-						messageTime: nextMessageTime,
-						reasoningThinkingTimesByPartIndex:
-							nextReasoningThinkingTimesByPartIndex,
-					};
-					hasChanges = true;
-				}
-			}
-
-			return hasChanges ? nextStateByMessageId : currentStateByMessageId;
-		});
-	}, [messages, thinkingTime]);
 
 	useEffect(() => {
 		if (!isAutoScrollEnabled || isHistoryLoading) {
@@ -252,14 +127,8 @@ const MessageArea = ({
 							message={message}
 							thinkingTime={
 								message.role === "assistant"
-									? (thinkingStateByMessageId[message.id]?.messageTime ?? null)
+									? (assistantThinkingTimeByMessageId?.[message.id] ?? null)
 									: null
-							}
-							reasoningThinkingTimesByPartIndex={
-								message.role === "assistant"
-									? thinkingStateByMessageId[message.id]
-											?.reasoningThinkingTimesByPartIndex
-									: undefined
 							}
 							hasToolCalls={hasToolCalls}
 							onSelectAttachment={onSelectAttachment}

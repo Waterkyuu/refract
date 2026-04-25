@@ -10,6 +10,13 @@ import {
 	setPipelinePlanAtom,
 	updatePipelineStepAtom,
 } from "@/atoms/pipeline";
+import useAssistantThinkingState, {
+	type AssistantThinkingTimeByMessageId,
+} from "@/hooks/use-assistant-thinking-state";
+import {
+	applyAssistantThinkingStateToMessages,
+	deriveAssistantThinkingStateByMessageId,
+} from "@/lib/chat/reasoning-timing";
 import type { PipelineStreamEvent } from "@/types/agent";
 import type { ChatMessageMetadata, ToolCallEvent } from "@/types/chat";
 import { useChat } from "@ai-sdk/react";
@@ -41,6 +48,7 @@ type UsePipelineChatReturn = {
 	isLoading: boolean;
 	error: Error | undefined;
 	thinkingTime: number | null;
+	assistantThinkingTimeByMessageId: AssistantThinkingTimeByMessageId;
 	append: (
 		text: string,
 		options?: {
@@ -310,19 +318,6 @@ const usePipelineChat = (
 		}
 	}, [rawMessages]);
 
-	useEffect(() => {
-		if (status === "ready" && rawMessages.length > 0) {
-			reasoningStartTimeRef.current = null;
-			onFinish?.(rawMessages);
-		}
-	}, [status, rawMessages, onFinish]);
-
-	useEffect(() => {
-		if (status === "error" && chat.error) {
-			onError?.(chat.error);
-		}
-	}, [status, chat.error, onError]);
-
 	const allMessages =
 		pipelineMessages.length > 0 ? pipelineMessages : renderedMessages;
 	const combinedStatus: ChatStatus =
@@ -333,6 +328,41 @@ const usePipelineChat = (
 		status === "streaming" ||
 		pipelineStatus === "submitted" ||
 		pipelineStatus === "streaming";
+	const {
+		assistantThinkingStateByMessageId,
+		assistantThinkingTimeByMessageId,
+		resolvedMessages,
+	} = useAssistantThinkingState(allMessages, thinkingTime);
+
+	useEffect(() => {
+		if (status === "ready" && rawMessages.length > 0) {
+			reasoningStartTimeRef.current = null;
+			const finalAssistantThinkingStateByMessageId =
+				deriveAssistantThinkingStateByMessageId(
+					assistantThinkingStateByMessageId,
+					rawMessages,
+					thinkingTime,
+				);
+			onFinish?.(
+				applyAssistantThinkingStateToMessages(
+					rawMessages,
+					finalAssistantThinkingStateByMessageId,
+				),
+			);
+		}
+	}, [
+		assistantThinkingStateByMessageId,
+		onFinish,
+		rawMessages,
+		status,
+		thinkingTime,
+	]);
+
+	useEffect(() => {
+		if (status === "error" && chat.error) {
+			onError?.(chat.error);
+		}
+	}, [status, chat.error, onError]);
 
 	const processPipelineStream = async (
 		response: Response,
@@ -788,12 +818,13 @@ const usePipelineChat = (
 	return {
 		input,
 		setInput,
-		messages: allMessages,
+		messages: resolvedMessages,
 		setMessages: (msgs: UIMessage[]) => chat.setMessages(msgs),
 		status: combinedStatus,
 		isLoading: combinedLoading,
 		error: combinedError,
 		thinkingTime,
+		assistantThinkingTimeByMessageId,
 		append,
 		reload,
 		stop,

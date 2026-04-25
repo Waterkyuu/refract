@@ -35,7 +35,6 @@ import { memo, useEffect, useMemo, useState } from "react";
 type AssistantMessageProps = {
 	message: UIMessage;
 	thinkingTime: number | null;
-	reasoningThinkingTimesByPartIndex?: Record<number, number>;
 	onSelectAttachment?: (attachment: ChatAttachment) => void;
 	onSelectRoundArtifact?: (artifact: WorkspaceRoundArtifact) => void;
 	onShowVnc?: () => void;
@@ -271,7 +270,6 @@ const AssistantMessage = memo(
 	({
 		message,
 		thinkingTime,
-		reasoningThinkingTimesByPartIndex,
 		onSelectAttachment,
 		onSelectRoundArtifact,
 		onShowVnc,
@@ -290,9 +288,6 @@ const AssistantMessage = memo(
 			(p) => p.type === "text" && (p as { text: string }).text,
 		);
 		const hasReasoning = renderableParts.some(isReasoningMessagePart);
-		const reasoningPartCount = renderableParts.filter(
-			isReasoningMessagePart,
-		).length;
 
 		const roundArtifacts = useMemo<WorkspaceRoundArtifacts>(
 			() => deriveRoundArtifactsFromMessage(message),
@@ -342,16 +337,11 @@ const AssistantMessage = memo(
 				<div className="min-w-0 max-w-[min(80%,42rem)] space-y-1">
 					{renderableParts.map((part, i) => {
 						if (isReasoningMessagePart(part)) {
-							const resolvedThinkingTime =
-								reasoningThinkingTimesByPartIndex?.[i] ??
-								getReasoningDurationSeconds(part) ??
-								(reasoningPartCount === 1 ? thinkingTime : null);
-
 							return (
 								<ReasoningBlock
 									key={`${message.id}-reasoning-${i}`}
 									text={part.text}
-									thinkingTime={resolvedThinkingTime}
+									thinkingTime={getReasoningDurationSeconds(part) ?? null}
 								/>
 							);
 						}
