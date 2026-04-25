@@ -9,6 +9,8 @@ import { memo, useCallback, useState } from "react";
 
 const ChartPanel = memo(() => {
 	const chart = useAtomValue(workspaceChartAtom);
+
+	console.log(chart);
 	const t = useTranslations("chat");
 	const [currentIndex, setCurrentIndex] = useState(0);
 

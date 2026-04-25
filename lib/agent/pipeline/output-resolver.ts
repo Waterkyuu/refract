@@ -371,10 +371,32 @@ const resolveChartOutput = (stepResult: StepExecutionResult): ChartOutput => {
 		BestEffortChartOutputSchema,
 	);
 
-	const toolArtifacts = extractArtifactsFromToolResults(
-		stepResult.toolResults,
-		"persistLatestChart",
+	const persistAllChartsResult = stepResult.toolResults.find(
+		({ toolName, output }) =>
+			toolName === "persistAllCharts" &&
+			output &&
+			typeof output === "object" &&
+			Array.isArray((output as Record<string, unknown>).artifacts),
 	);
+	const toolArtifacts =
+		persistAllChartsResult &&
+		Array.isArray(
+			(persistAllChartsResult.output as Record<string, unknown>).artifacts,
+		)
+			? (
+					(persistAllChartsResult.output as Record<string, unknown>)
+						.artifacts as Array<Record<string, unknown>>
+				)
+					.filter((a) => typeof a.fileId === "string")
+					.map((a) => ({
+						contentType: a.contentType as string | null | undefined,
+						downloadUrl: a.downloadUrl as string,
+						fileId: a.fileId as string,
+						fileSize: a.fileSize as number | null | undefined,
+						filename: a.filename as string,
+						kind: a.kind as "dataset" | "document" | undefined,
+					}))
+			: [];
 	const outputArtifacts =
 		toolArtifacts.length > 0
 			? toolArtifacts
