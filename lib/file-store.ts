@@ -2,13 +2,14 @@ import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { S3 } from "@/infra/r2";
-import { isDatasetFilename } from "@/lib/file";
+import { getLowercaseExtension, isDatasetFilename } from "@/lib/file";
 import {
 	type DatasetPreview,
 	type FileRecord,
 	FileRecordSchema,
 } from "@/types";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import iconv from "iconv-lite";
 import { read, utils } from "xlsx";
 
 const BUCKET_NAME = process.env.BUCKET_NAME ?? "";
@@ -23,6 +24,55 @@ const R2_PUBLIC_BASE_URL = process.env.R2_PUBLIC_BASE_URL?.trim();
 const ensureStorageDirs = async () => {
 	await mkdir(CHUNKS_ROOT, { recursive: true });
 	await mkdir(RECORDS_ROOT, { recursive: true });
+};
+
+// Heuristic: try UTF-8 first; if invalid sequences are found, fall back to GB18030.
+const decodeBufferToUtf8 = (buffer: Buffer): string => {
+	const BOM = 0xef_bb_bf;
+	if (
+		buffer.length >= 3 &&
+		buffer[0] === BOM >> 16 &&
+		buffer[1] === ((BOM >> 8) & 0xff) &&
+		buffer[2] === (BOM & 0xff)
+	) {
+		return buffer.toString("utf-8");
+	}
+
+	const asUtf8 = buffer.toString("utf-8");
+	if (!isUtf8(buffer)) {
+		return iconv.decode(buffer, "gb18030");
+	}
+	return asUtf8;
+};
+
+const isUtf8 = (buf: Buffer): boolean => {
+	let i = 0;
+	while (i < buf.length) {
+		const byte = buf[i];
+		if (byte <= 0x7f) {
+			i += 1;
+		} else if (byte >= 0xc2 && byte <= 0xdf) {
+			if (i + 1 >= buf.length || (buf[i + 1] & 0xc0) !== 0x80) return false;
+			i += 2;
+		} else if (byte >= 0xe0 && byte <= 0xef) {
+			if (i + 2 >= buf.length) return false;
+			if (byte === 0xe0 && buf[i + 1] < 0xa0) return false;
+			if ((buf[i + 1] & 0xc0) !== 0x80) return false;
+			if ((buf[i + 2] & 0xc0) !== 0x80) return false;
+			i += 3;
+		} else if (byte >= 0xf0 && byte <= 0xf4) {
+			if (i + 3 >= buf.length) return false;
+			if (byte === 0xf0 && buf[i + 1] < 0x90) return false;
+			if (byte === 0xf4 && buf[i + 1] > 0x8f) return false;
+			if ((buf[i + 1] & 0xc0) !== 0x80) return false;
+			if ((buf[i + 2] & 0xc0) !== 0x80) return false;
+			if ((buf[i + 3] & 0xc0) !== 0x80) return false;
+			i += 4;
+		} else {
+			return false;
+		}
+	}
+	return true;
 };
 
 const sanitizeFilename = (filename: string) => basename(filename);
@@ -67,13 +117,22 @@ const buildDatasetPreview = (
 	}
 
 	const limit = normalizePreviewLimit(rowLimit);
+	const ext = getLowercaseExtension(filename);
+	const isCsv = ext === "csv" || ext === "tsv";
 
-	const workbook = read(buffer, {
-		type: "buffer",
-		cellDates: true,
-		cellText: true,
-		dense: true,
-	});
+	const workbook = isCsv
+		? read(decodeBufferToUtf8(buffer), {
+				type: "string",
+				cellDates: true,
+				cellText: true,
+				dense: true,
+			})
+		: read(buffer, {
+				type: "buffer",
+				cellDates: true,
+				cellText: true,
+				dense: true,
+			});
 	const activeSheet = workbook.SheetNames[0];
 	if (!activeSheet) {
 		return {
