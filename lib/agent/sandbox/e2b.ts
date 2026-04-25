@@ -317,16 +317,16 @@ const createSandboxSession = (): SandboxSession => {
 			} catch (error) {
 				throw new Error(formatSandboxOperationError("run Python code", error));
 			}
-			const latestChartResult = execution.results.find((result) => result.png);
-
-			if (latestChartResult?.png) {
-				entry.chartArtifacts.push({
-					png: latestChartResult.png,
-					title:
-						typeof latestChartResult.chart?.title === "string"
-							? latestChartResult.chart.title
-							: latestChartResult.text,
-				});
+			for (const result of execution.results) {
+				if (result.png) {
+					entry.chartArtifacts.push({
+						png: result.png,
+						title:
+							typeof result.chart?.title === "string"
+								? result.chart.title
+								: result.text,
+					});
+				}
 			}
 
 			return {
