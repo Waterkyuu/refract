@@ -13,11 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { generateId } from "@/lib/utils";
+import type { Skill, SkillFormState } from "@/types";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { Skill, SkillFormState } from "./types";
 
 const STORAGE_KEY = "refract-skills";
 

@@ -5,3 +5,4 @@ export * from "./auth";
 export * from "./file";
 export * from "./workspace";
 export * from "./worker";
+export * from "./settings";

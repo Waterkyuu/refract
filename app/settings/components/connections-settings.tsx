@@ -10,17 +10,16 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Github, type LucideIcon, Notebook } from "lucide-react";
+import type { ConnectionService, ConnectionStatus } from "@/types";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { ConnectionService, ConnectionStatus } from "./types";
 
 const STORAGE_KEY = "refract-connections";
 
-const SERVICE_ICONS: Record<ConnectionService, LucideIcon> = {
-	github: Github,
-	notion: Notebook,
+const SERVICE_ICONS: Record<ConnectionService, string> = {
+	github: "/images/platform/github.svg",
+	notion: "/images/platform/notion.svg",
 };
 
 const SERVICE_KEYS: ConnectionService[] = ["github", "notion"];
@@ -106,7 +105,7 @@ const ConnectionsSettings = () => {
 
 			<div className="divide-y rounded-lg border">
 				{SERVICE_KEYS.map((service) => {
-					const Icon = SERVICE_ICONS[service];
+					const iconSrc = SERVICE_ICONS[service];
 					const status = getConnection(service);
 					const isConnected = status?.connected ?? false;
 					const isLoading = loadingService === service;
@@ -120,7 +119,11 @@ const ConnectionsSettings = () => {
 						>
 							<div className="flex items-center gap-3">
 								<div className="flex size-10 items-center justify-center rounded-lg border bg-muted/50">
-									<Icon className="size-5" />
+									<img
+										src={iconSrc}
+										alt={`${service}-icon`}
+										className="size-5"
+									/>
 								</div>
 								<div>
 									<p className="font-medium text-sm">{t(serviceNameKey)}</p>
