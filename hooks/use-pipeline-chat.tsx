@@ -380,12 +380,6 @@ const usePipelineChat = (
 		setPipelineStatus("streaming");
 		jotaiStore.set(agentStatusAtom, "thinking");
 
-		const findToolPart = (toolCallId: string): ToolPipelinePart | undefined =>
-			assistantParts.find(
-				(p): p is ToolPipelinePart =>
-					"toolCallId" in p && p.toolCallId === toolCallId,
-			);
-
 		const findLatestReasoningPart = (): ReasoningPipelinePart | undefined => {
 			for (let index = assistantParts.length - 1; index >= 0; index -= 1) {
 				const part = assistantParts[index];
@@ -576,10 +570,15 @@ const usePipelineChat = (
 								evt.output,
 							);
 
-							const toolPart = findToolPart(evt.toolCallId);
-							if (toolPart) {
-								toolPart.state = "output-available";
-								toolPart.output = sanitizedOutput;
+							const toolPartIndex = assistantParts.findIndex(
+								(p) => "toolCallId" in p && p.toolCallId === evt.toolCallId,
+							);
+							if (toolPartIndex !== -1) {
+								assistantParts[toolPartIndex] = {
+									...assistantParts[toolPartIndex],
+									state: "output-available",
+									output: sanitizedOutput,
+								} as ToolPipelinePart;
 							}
 
 							dispatchTool(
@@ -592,10 +591,15 @@ const usePipelineChat = (
 							break;
 						}
 						case "tool-error": {
-							const toolPart = findToolPart(evt.toolCallId);
-							if (toolPart) {
-								toolPart.state = "output-error";
-								toolPart.errorText = evt.error;
+							const toolPartIndex = assistantParts.findIndex(
+								(p) => "toolCallId" in p && p.toolCallId === evt.toolCallId,
+							);
+							if (toolPartIndex !== -1) {
+								assistantParts[toolPartIndex] = {
+									...assistantParts[toolPartIndex],
+									state: "output-error",
+									errorText: evt.error,
+								} as ToolPipelinePart;
 							} else {
 								assistantParts.push({
 									type: `tool-${evt.toolName}`,
