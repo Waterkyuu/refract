@@ -112,6 +112,8 @@
 		"datasetSummary": "{rows} 行，{columns} 列，工作表 {sheet}",
 		"downloadArtifact": "下载",
 		"chartGeneratedAt": "生成时间 {time}",
+		"previousChart": "上一张",
+		"nextChart": "下一张",
 		"live": "实时",
 		"waitingSandbox": "等待 Agent 沙盒...",
 		"waitingChart": "等待图表输出...",

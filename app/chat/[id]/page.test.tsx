@@ -108,6 +108,7 @@ describe("ChatPage workspace reset", () => {
 		jotaiStore.set(workspaceViewAtom, "chart");
 		jotaiStore.set(workspaceChartAtom, {
 			generatedAt: 1,
+			images: [],
 			title: "old-chart",
 			toolCallId: "old-tool",
 		});
@@ -178,7 +179,9 @@ describe("ChatPage workspace reset", () => {
 
 		await waitFor(() => {
 			expect(jotaiStore.get(workspaceDatasetAtom)?.fileId).toBe("dataset-1");
-			expect(jotaiStore.get(workspaceChartAtom)?.fileId).toBe("chart-1");
+			expect(jotaiStore.get(workspaceChartAtom)?.images[0]?.fileId).toBe(
+				"chart-1",
+			);
 			expect(jotaiStore.get(workspaceViewAtom)).toBe("chart");
 		});
 
@@ -219,7 +222,9 @@ describe("ChatPage workspace reset", () => {
 		});
 
 		await waitFor(() => {
-			expect(jotaiStore.get(workspaceChartAtom)?.fileId).toBe("chart-2");
+			expect(jotaiStore.get(workspaceChartAtom)?.images[0]?.fileId).toBe(
+				"chart-2",
+			);
 		});
 
 		expect(jotaiStore.get(workspaceViewAtom)).toBe("dataset");

@@ -41,7 +41,7 @@ const MAIN_MODEL = process.env.GLM_MODEL ?? "glm-4.6";
 const hasPersistedChartArtifact = (toolResults: StepToolResult[]) =>
 	toolResults.some(({ output, toolName }) => {
 		if (
-			toolName !== "persistLatestChart" ||
+			toolName !== "persistAllCharts" ||
 			!output ||
 			typeof output !== "object"
 		) {
@@ -50,9 +50,7 @@ const hasPersistedChartArtifact = (toolResults: StepToolResult[]) =>
 
 		const outputRecord = output as Record<string, unknown>;
 		return (
-			typeof outputRecord.fileId === "string" &&
-			typeof outputRecord.filename === "string" &&
-			typeof outputRecord.downloadUrl === "string"
+			Array.isArray(outputRecord.artifacts) && outputRecord.artifacts.length > 0
 		);
 	});
 
@@ -95,21 +93,26 @@ const ensurePersistedChartArtifacts = async (
 		return stepResult;
 	}
 
-	const record = await sandboxSession.persistLatestChart();
+	const records = await sandboxSession.persistAllCharts();
+
+	const artifacts = records.map((record) => ({
+		contentType: record.contentType,
+		downloadUrl: getFileDownloadUrl(record),
+		fileId: record.id,
+		fileSize: record.fileSize,
+		filename: record.filename,
+	}));
 
 	return {
 		...stepResult,
 		toolResults: [
 			...stepResult.toolResults,
 			{
-				toolName: "persistLatestChart",
+				toolName: "persistAllCharts",
 				output: {
-					contentType: record.contentType,
-					downloadUrl: getFileDownloadUrl(record),
-					fileId: record.id,
-					fileSize: record.fileSize,
-					filename: record.filename,
 					status: "success" as const,
+					chartCount: artifacts.length,
+					artifacts,
 				},
 			},
 		],

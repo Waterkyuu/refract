@@ -112,6 +112,8 @@
 		"datasetSummary": "{rows} rows, {columns} columns, sheet {sheet}",
 		"downloadArtifact": "Download",
 		"chartGeneratedAt": "Generated at {time}",
+		"previousChart": "Previous chart",
+		"nextChart": "Next chart",
 		"live": "Live",
 		"waitingSandbox": "Waiting for Agent Sandbox...",
 		"waitingChart": "Waiting for chart output...",

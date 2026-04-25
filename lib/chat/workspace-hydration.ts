@@ -60,7 +60,9 @@ const cloneWorkspaceSnapshot = (
 	snapshot: WorkspaceSnapshot,
 ): WorkspaceSnapshot => ({
 	...snapshot,
-	chart: snapshot.chart ? { ...snapshot.chart } : null,
+	chart: snapshot.chart
+		? { ...snapshot.chart, images: [...snapshot.chart.images] }
+		: null,
 	dataset: snapshot.dataset ? { ...snapshot.dataset } : null,
 	file: snapshot.file ? { ...snapshot.file } : null,
 });
@@ -318,29 +320,43 @@ const deriveRoundArtifactsFromMessage = (
 			continue;
 		}
 
-		if (toolName === "persistLatestChart") {
-			const downloadUrl =
-				typeof output.downloadUrl === "string" ? output.downloadUrl : undefined;
-			const fileId =
-				typeof output.fileId === "string" ? output.fileId : undefined;
-			const filename =
-				typeof output.filename === "string" ? output.filename : undefined;
-			if (!downloadUrl && !fileId && !filename) {
+		if (toolName === "persistAllCharts") {
+			const outputArtifacts = Array.isArray(output.artifacts)
+				? output.artifacts
+				: [];
+			if (outputArtifacts.length === 0) {
 				continue;
 			}
+
+			const chartImages = outputArtifacts.map(
+				(artifact: Record<string, unknown>) => ({
+					downloadUrl: getFileDownloadUrl(
+						typeof artifact.fileId === "string" ? artifact.fileId : undefined,
+						typeof artifact.downloadUrl === "string"
+							? artifact.downloadUrl
+							: undefined,
+					),
+					fileId:
+						typeof artifact.fileId === "string" ? artifact.fileId : undefined,
+					filename:
+						typeof artifact.filename === "string"
+							? artifact.filename
+							: undefined,
+				}),
+			);
 
 			const latestChart =
 				artifacts.chart.length > 0
 					? artifacts.chart[artifacts.chart.length - 1]
 					: undefined;
 			if (latestChart) {
-				latestChart.downloadUrl = getFileDownloadUrl(fileId, downloadUrl);
-				latestChart.fileId = fileId ?? latestChart.fileId;
-				latestChart.filename = filename ?? latestChart.filename;
-				latestChart.extension = filename
-					? getFileExtension(filename)
+				latestChart.downloadUrl = chartImages[0]?.downloadUrl;
+				latestChart.fileId = chartImages[0]?.fileId;
+				latestChart.filename = chartImages[0]?.filename;
+				latestChart.extension = chartImages[0]?.filename
+					? getFileExtension(chartImages[0].filename as string)
 					: latestChart.extension;
-				latestChart.label = filename ?? latestChart.label;
+				latestChart.label = chartImages[0]?.filename ?? latestChart.label;
 				continue;
 			}
 
@@ -349,11 +365,13 @@ const deriveRoundArtifactsFromMessage = (
 				id: `${message.id}-chart-file-${createdAt}`,
 				category: "chart",
 				createdAt,
-				label: filename ?? "Generated chart",
-				fileId,
-				filename,
-				extension: filename ? getFileExtension(filename) : undefined,
-				downloadUrl: getFileDownloadUrl(fileId, downloadUrl),
+				label: "Generated charts",
+				fileId: chartImages[0]?.fileId,
+				filename: chartImages[0]?.filename,
+				extension: chartImages[0]?.filename
+					? getFileExtension(chartImages[0].filename as string)
+					: undefined,
+				downloadUrl: chartImages[0]?.downloadUrl,
 				toolCallId,
 			});
 			continue;
@@ -467,11 +485,16 @@ const deriveWorkspaceSnapshotFromMessages = (
 
 			if (artifact.category === "chart") {
 				snapshot.chart = {
-					chart: artifact.chart,
-					downloadUrl: artifact.downloadUrl,
-					fileId: artifact.fileId,
-					filename: artifact.filename,
 					generatedAt: artifact.createdAt,
+					images: artifact.downloadUrl
+						? [
+								{
+									downloadUrl: artifact.downloadUrl,
+									fileId: artifact.fileId,
+									filename: artifact.filename,
+								},
+							]
+						: [],
 					title: artifact.title ?? artifact.label,
 					toolCallId: artifact.toolCallId ?? artifact.id,
 				};

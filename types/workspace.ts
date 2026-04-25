@@ -1,11 +1,14 @@
 type WorkspaceView = "empty" | "vnc" | "chart" | "dataset" | "file" | "typst";
 
-type WorkspaceChart = {
-	chart?: Record<string, unknown>;
+type WorkspaceChartImage = {
 	downloadUrl?: string;
 	fileId?: string;
 	filename?: string;
+};
+
+type WorkspaceChart = {
 	generatedAt: number;
+	images: WorkspaceChartImage[];
 	title?: string;
 	toolCallId: string;
 };
@@ -24,4 +27,10 @@ type WorkspaceFile = {
 	fileSize?: number;
 };
 
-export type { WorkspaceChart, WorkspaceDataset, WorkspaceFile, WorkspaceView };
+export type {
+	WorkspaceChart,
+	WorkspaceChartImage,
+	WorkspaceDataset,
+	WorkspaceFile,
+	WorkspaceView,
+};

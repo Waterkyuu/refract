@@ -301,11 +301,16 @@ const ChatPage = ({ params }: ChatPageProps) => {
 		(artifact: WorkspaceRoundArtifact) => {
 			if (artifact.category === "chart") {
 				jotaiStore.set(showChartWorkspaceAtom, {
-					chart: artifact.chart,
-					downloadUrl: artifact.downloadUrl,
-					fileId: artifact.fileId,
-					filename: artifact.filename,
 					generatedAt: artifact.createdAt || Date.now(),
+					images: artifact.downloadUrl
+						? [
+								{
+									downloadUrl: artifact.downloadUrl,
+									fileId: artifact.fileId,
+									filename: artifact.filename,
+								},
+							]
+						: [],
 					title: artifact.title ?? artifact.label,
 					toolCallId: artifact.toolCallId ?? artifact.id,
 				});

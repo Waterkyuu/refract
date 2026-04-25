@@ -1,8 +1,8 @@
 import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import {
 	createCodeInterpreterTool,
+	createPersistAllChartsTool,
 	createPersistCodeFileTool,
-	createPersistLatestChartTool,
 } from "@/lib/agent/tools/shared";
 import { createLoadSkillTool } from "@/lib/agent/tools/skill-tools";
 import { tool, zodSchema } from "ai";
@@ -111,7 +111,7 @@ const createChatTools = ({
 	loadSkill: loadSkillTool,
 	navigateBrowser: navigateBrowserTool(sandboxSession),
 	persistCodeFile: createPersistCodeFileTool(sandboxSession),
-	persistLatestChart: createPersistLatestChartTool(sandboxSession),
+	persistAllCharts: createPersistAllChartsTool(sandboxSession),
 	searchWeb: searchWebTool(sandboxSession),
 });
 

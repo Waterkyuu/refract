@@ -1,17 +1,25 @@
 import jotaiStore from "@/atoms";
 import { workspaceChartAtom } from "@/atoms/chat";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import ChartPanel from "./chart-panel";
 
 describe("ChartPanel", () => {
-	it("renders chart image from downloadUrl when png payload is absent", () => {
+	beforeEach(() => {
+		jotaiStore.set(workspaceChartAtom, null);
+	});
+
+	it("renders chart image from downloadUrl when single image in images array", () => {
 		jotaiStore.set(workspaceChartAtom, {
-			downloadUrl: "https://public.example/revenue.png",
-			fileId: "chart-1",
-			filename: "revenue.png",
 			generatedAt: Date.now(),
 			title: "Revenue trend",
 			toolCallId: "tool-1",
+			images: [
+				{
+					downloadUrl: "https://public.example/revenue.png",
+					fileId: "chart-1",
+					filename: "revenue.png",
+				},
+			],
 		});
 
 		render(<ChartPanel />);
@@ -20,26 +28,87 @@ describe("ChartPanel", () => {
 		expect(image).toHaveAttribute("src", "https://public.example/revenue.png");
 	});
 
-	it("keeps waiting for the chart asset instead of dumping raw chart JSON", () => {
+	it("shows navigation controls when multiple images exist", () => {
 		jotaiStore.set(workspaceChartAtom, {
-			chart: {
-				type: "line",
-				title: "Monthly Sales Amount Trend (2024)",
-				elements: [
-					{
-						label: "Sales Amount",
-						points: [["2024-01-01T00:00:00", 95795]],
-					},
-				],
-			},
 			generatedAt: Date.now(),
-			title: "Monthly Sales Amount Trend (2024)",
-			toolCallId: "tool-2",
+			title: "Charts",
+			toolCallId: "tool-1",
+			images: [
+				{
+					downloadUrl: "https://public.example/chart1.png",
+					fileId: "chart-1",
+					filename: "chart_1.png",
+				},
+				{
+					downloadUrl: "https://public.example/chart2.png",
+					fileId: "chart-2",
+					filename: "chart_2.png",
+				},
+			],
 		});
 
 		render(<ChartPanel />);
 
+		expect(screen.getByText("1 / 2")).toBeInTheDocument();
+		expect(screen.getByLabelText("Previous chart")).toBeInTheDocument();
+		expect(screen.getByLabelText("Next chart")).toBeInTheDocument();
+	});
+
+	it("navigates between images with next/previous buttons", () => {
+		jotaiStore.set(workspaceChartAtom, {
+			generatedAt: Date.now(),
+			title: "Charts",
+			toolCallId: "tool-1",
+			images: [
+				{
+					downloadUrl: "https://public.example/chart1.png",
+					fileId: "chart-1",
+					filename: "chart_1.png",
+				},
+				{
+					downloadUrl: "https://public.example/chart2.png",
+					fileId: "chart-2",
+					filename: "chart_2.png",
+				},
+			],
+		});
+
+		render(<ChartPanel />);
+
+		const image = screen.getByRole("img", { name: "Charts" });
+		expect(image).toHaveAttribute("src", "https://public.example/chart1.png");
+
+		fireEvent.click(screen.getByLabelText("Next chart"));
+		expect(image).toHaveAttribute("src", "https://public.example/chart2.png");
+		expect(screen.getByText("2 / 2")).toBeInTheDocument();
+
+		fireEvent.click(screen.getByLabelText("Previous chart"));
+		expect(image).toHaveAttribute("src", "https://public.example/chart1.png");
+		expect(screen.getByText("1 / 2")).toBeInTheDocument();
+	});
+
+	it("hides navigation controls when only one image", () => {
+		jotaiStore.set(workspaceChartAtom, {
+			generatedAt: Date.now(),
+			title: "Single",
+			toolCallId: "tool-1",
+			images: [
+				{
+					downloadUrl: "https://public.example/chart.png",
+					fileId: "chart-1",
+					filename: "chart.png",
+				},
+			],
+		});
+
+		render(<ChartPanel />);
+
+		expect(screen.queryByLabelText("Previous chart")).not.toBeInTheDocument();
+		expect(screen.queryByLabelText("Next chart")).not.toBeInTheDocument();
+	});
+
+	it("shows waiting state when no chart data", () => {
+		render(<ChartPanel />);
 		expect(screen.getByText("Waiting for chart output...")).toBeInTheDocument();
-		expect(screen.queryByText(/"type": "line"/)).not.toBeInTheDocument();
 	});
 });

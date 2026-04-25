@@ -153,8 +153,8 @@ const extractToolEventsFromMessages = (
 
 				if (chartResult) {
 					jotaiStore.set(showChartWorkspaceAtom, {
-						chart: chartResult.chart,
 						generatedAt: Date.now(),
+						images: [],
 						title:
 							typeof chartResult.chart?.title === "string"
 								? chartResult.chart.title
@@ -200,9 +200,13 @@ const extractToolEventsFromMessages = (
 				if (currentChart && output.downloadUrl) {
 					jotaiStore.set(showChartWorkspaceAtom, {
 						...currentChart,
-						downloadUrl: output.downloadUrl,
-						fileId: output.fileId,
-						filename: output.filename,
+						images: [
+							{
+								downloadUrl: output.downloadUrl,
+								fileId: output.fileId,
+								filename: output.filename,
+							},
+						],
 					});
 				}
 			}

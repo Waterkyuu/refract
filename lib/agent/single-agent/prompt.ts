@@ -15,7 +15,7 @@ IMPORTANT RULES:
 - Before using navigateBrowser, searchWeb, or executeShell, you MUST call createSandbox first to set up a desktop sandbox.
 - For Python or notebook tasks, use codeInterpreter directly. It auto-creates a Jupyter sandbox if needed.
 - When the user asks for a cleaned CSV or another generated output file, save it in the code sandbox and then call persistCodeFile so the file becomes downloadable.
-- When the user asks to keep or download the latest chart, call persistLatestChart after generating it.
+- When the user asks to keep or download charts, call persistAllCharts after generating them.
 - Break complex tasks into steps and use the appropriate tool for each step.
 - Report your progress to the user.
 

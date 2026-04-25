@@ -41,14 +41,22 @@ const assistantRoundMessage: UIMessage = {
 			},
 		},
 		{
-			type: "tool-persistLatestChart",
+			type: "tool-persistAllCharts",
 			toolCallId: "chart-file-call",
 			state: "output-available",
 			input: {},
 			output: {
-				fileId: "chart-1",
-				filename: "revenue.png",
-				downloadUrl: "/api/file/chart-1/download",
+				status: "success",
+				chartCount: 1,
+				artifacts: [
+					{
+						fileId: "chart-1",
+						filename: "revenue.png",
+						downloadUrl: "/api/file/chart-1/download",
+						contentType: "image/png",
+						fileSize: 2048,
+					},
+				],
 			},
 		},
 		{
@@ -139,8 +147,13 @@ describe("workspace hydration", () => {
 		expect(snapshot.dataset).not.toHaveProperty("preview");
 		expect(snapshot.chart).toEqual(
 			expect.objectContaining({
-				fileId: "chart-1",
-				filename: "revenue.png",
+				images: [
+					expect.objectContaining({
+						fileId: "chart-1",
+						filename: "revenue.png",
+						downloadUrl: "/api/file/chart-1/download",
+					}),
+				],
 				toolCallId: "chart-tool-call",
 			}),
 		);

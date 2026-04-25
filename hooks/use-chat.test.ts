@@ -145,6 +145,7 @@ describe("extractToolEventsFromMessages", () => {
 	it("updates workspace chart download info when chart persistence completes", () => {
 		jotaiStore.set(workspaceChartAtom, {
 			generatedAt: Date.now(),
+			images: [],
 			title: "Revenue",
 			toolCallId: "chart-call",
 		});
@@ -166,9 +167,13 @@ describe("extractToolEventsFromMessages", () => {
 
 		expect(jotaiStore.get(workspaceChartAtom)).toEqual(
 			expect.objectContaining({
-				downloadUrl: "/api/file/chart-1/download",
-				fileId: "chart-1",
-				filename: "revenue.png",
+				images: [
+					{
+						downloadUrl: "/api/file/chart-1/download",
+						fileId: "chart-1",
+						filename: "revenue.png",
+					},
+				],
 				title: "Revenue",
 			}),
 		);

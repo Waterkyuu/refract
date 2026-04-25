@@ -31,10 +31,7 @@ type ManagedCodeSandbox = {
 	sandbox: CodeSandbox;
 	sandboxId: string;
 	createdAt: number;
-	lastChartArtifact?: {
-		png: string;
-		title?: string;
-	};
+	chartArtifacts: Array<{ png: string; title?: string }>;
 	syncedFileIds: Set<string>;
 	timeoutHandle: ReturnType<typeof setTimeout> | null;
 };
@@ -66,11 +63,6 @@ type PersistedFileInput = {
 	kind?: "dataset" | "document";
 };
 
-type PersistedChartInput = {
-	contentType?: string;
-	filename?: string;
-};
-
 type SandboxSession = {
 	id: string;
 	createDesktopSandbox: (
@@ -91,9 +83,9 @@ type SandboxSession = {
 	persistCodeFile: (
 		input: PersistedFileInput,
 	) => Promise<Awaited<ReturnType<typeof storeFileRecordFromBytes>>>;
-	persistLatestChart: (
-		input?: PersistedChartInput,
-	) => Promise<Awaited<ReturnType<typeof storeFileRecordFromBytes>>>;
+	persistAllCharts: () => Promise<
+		Awaited<ReturnType<typeof storeFileRecordFromBytes>>[]
+	>;
 	cleanup: () => Promise<void>;
 };
 
@@ -173,7 +165,7 @@ const createManagedCodeSandbox = async (
 		sandbox,
 		sandboxId: sandbox.sandboxId,
 		createdAt: Date.now(),
-		lastChartArtifact: undefined,
+		chartArtifacts: [],
 		syncedFileIds: new Set<string>(),
 		timeoutHandle: null,
 	};
@@ -327,15 +319,15 @@ const createSandboxSession = (): SandboxSession => {
 			}
 			const latestChartResult = execution.results.find((result) => result.png);
 
-			entry.lastChartArtifact = latestChartResult?.png
-				? {
-						png: latestChartResult.png,
-						title:
-							typeof latestChartResult.chart?.title === "string"
-								? latestChartResult.chart.title
-								: latestChartResult.text,
-					}
-				: entry.lastChartArtifact;
+			if (latestChartResult?.png) {
+				entry.chartArtifacts.push({
+					png: latestChartResult.png,
+					title:
+						typeof latestChartResult.chart?.title === "string"
+							? latestChartResult.chart.title
+							: latestChartResult.text,
+				});
+			}
 
 			return {
 				text: execution.text,
@@ -381,21 +373,25 @@ const createSandboxSession = (): SandboxSession => {
 				kind,
 			});
 		},
-		persistLatestChart: async ({
-			contentType = "image/png",
-			filename = "chart.png",
-		}: PersistedChartInput = {}) => {
+		persistAllCharts: async () => {
 			const entry = await ensureCodeSandbox();
-			if (!entry.lastChartArtifact?.png) {
-				throw new Error("No chart artifact available. Generate a chart first.");
+			if (entry.chartArtifacts.length === 0) {
+				throw new Error("No chart artifacts available. Generate charts first.");
 			}
 
-			return storeFileRecordFromBytes({
-				bytes: Buffer.from(entry.lastChartArtifact.png, "base64"),
-				contentType,
-				filename,
-				kind: "document",
-			});
+			const records = await Promise.all(
+				entry.chartArtifacts.map((artifact, index) =>
+					storeFileRecordFromBytes({
+						bytes: Buffer.from(artifact.png, "base64"),
+						contentType: "image/png",
+						filename: `chart_${index + 1}.png`,
+						kind: "document",
+					}),
+				),
+			);
+
+			entry.chartArtifacts = [];
+			return records;
 		},
 		cleanup: async () => {
 			await killDesktopSandbox(desktopEntry);

@@ -1,7 +1,7 @@
 import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import {
 	createCodeInterpreterTool,
-	createPersistLatestChartTool,
+	createPersistAllChartsTool,
 } from "./shared";
 
 type ChartToolsOptions = {
@@ -14,7 +14,7 @@ const createChartTools = ({
 	sandboxSession,
 }: ChartToolsOptions) => ({
 	codeInterpreter: createCodeInterpreterTool({ fileIds, sandboxSession }),
-	persistLatestChart: createPersistLatestChartTool(sandboxSession),
+	persistAllCharts: createPersistAllChartsTool(sandboxSession),
 });
 
 export { createChartTools };
