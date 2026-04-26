@@ -144,26 +144,8 @@ You should also make sure the same production domain is allowed in any OAuth pro
 
 ## Architecture
 
-```
-User Input --> Home Page (/) --> /chat/[id]
-                                    |
-                     +--------------+---------------+
-                     |                              |
-                Chat Panel (30%)             VNC Panel (70%)
-                - MessageArea                - E2B VNC stream
-                - InputField                - Live status badge
-                - DebugPanel
-                     |
-                POST /api/chat
-                - Zhipu AI (GLM-4-flash)
-                - 5 Tools:
-                  * createSandbox
-                  * codeInterpreter
-                  * executeShell
-                  * navigateBrowser
-                  * searchWeb
-```
+![Refract agent orchestration architecture](screenshots/agent-orchestration-architecture.png)
 
 ## License
 
-Private
+MIT
