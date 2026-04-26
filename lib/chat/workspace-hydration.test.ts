@@ -207,6 +207,97 @@ describe("workspace hydration", () => {
 		expect(snapshot.view).toBe("dataset");
 	});
 
+	it("enriches phantom codeInterpreter chart artifacts with file artifact info", () => {
+		const message: UIMessage = {
+			id: "assistant-phantom-chart",
+			role: "assistant",
+			parts: [
+				{
+					type: "tool-codeInterpreter",
+					toolCallId: "code-call-1",
+					state: "output-available",
+					input: {},
+					output: {
+						results: [{ chart: { title: "Sales Amount Trend in 2024" } }],
+					},
+				},
+				{
+					type: "tool-codeInterpreter",
+					toolCallId: "code-call-2",
+					state: "output-error",
+					input: {},
+					errorText: "SyntaxError",
+				},
+				{
+					type: "tool-codeInterpreter",
+					toolCallId: "code-call-3",
+					state: "output-available",
+					input: {},
+					output: {
+						results: [
+							{
+								chart: {
+									title: "2024 Sales Performance: Monthly Metrics Overview",
+								},
+							},
+						],
+					},
+				},
+				{
+					type: "artifact",
+					category: "chart",
+					fileId: "chart-file-1",
+					filename: "chart_1.png",
+					extension: "png",
+					downloadUrl: "/api/file/chart-file-1/download",
+				} as unknown as UIMessage["parts"][number],
+				{
+					type: "artifact",
+					category: "chart",
+					fileId: "chart-file-2",
+					filename: "chart_2.png",
+					extension: "png",
+					downloadUrl: "/api/file/chart-file-2/download",
+				} as unknown as UIMessage["parts"][number],
+				{
+					type: "artifact",
+					category: "chart",
+					fileId: "chart-file-3",
+					filename: "chart_3.png",
+					extension: "png",
+					downloadUrl: "/api/file/chart-file-3/download",
+				} as unknown as UIMessage["parts"][number],
+			],
+		};
+
+		const artifacts = deriveRoundArtifactsFromMessage(message);
+
+		expect(artifacts.chart).toHaveLength(3);
+		expect(artifacts.chart[0]).toEqual(
+			expect.objectContaining({
+				title: "Sales Amount Trend in 2024",
+				fileId: "chart-file-1",
+				filename: "chart_1.png",
+				downloadUrl: "/api/file/chart-file-1/download",
+			}),
+		);
+		expect(artifacts.chart[1]).toEqual(
+			expect.objectContaining({
+				title: "2024 Sales Performance: Monthly Metrics Overview",
+				fileId: "chart-file-2",
+				filename: "chart_2.png",
+				downloadUrl: "/api/file/chart-file-2/download",
+			}),
+		);
+		expect(artifacts.chart[2]).toEqual(
+			expect.objectContaining({
+				fileId: "chart-file-3",
+				filename: "chart_3.png",
+				downloadUrl: "/api/file/chart-file-3/download",
+			}),
+		);
+	});
+
 	it("hydrates data artifacts without preview into dataset workspace", () => {
 		const assistantMessage: UIMessage = {
 			id: "assistant-data-artifact-no-preview",

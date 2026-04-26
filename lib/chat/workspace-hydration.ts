@@ -233,6 +233,30 @@ const deriveRoundArtifactsFromMessage = (
 				continue;
 			}
 
+			if (inferredCategory === "chart" && fileId) {
+				const fileIdAlreadyUsed = artifacts.chart.some(
+					(a) => a.fileId === fileId,
+				);
+				if (!fileIdAlreadyUsed) {
+					const phantomIndex = artifacts.chart.findIndex(
+						(a) => !a.fileId && !a.downloadUrl,
+					);
+					if (phantomIndex !== -1) {
+						const phantom = artifacts.chart[phantomIndex];
+						phantom.fileId = fileId;
+						phantom.filename = filename;
+						phantom.downloadUrl = getFileDownloadUrl(
+							fileId,
+							typeof partRecord.downloadUrl === "string"
+								? partRecord.downloadUrl
+								: undefined,
+						);
+						phantom.extension = extension;
+						continue;
+					}
+				}
+			}
+
 			const createdAt = nextCreatedAt();
 			pushRoundArtifact(artifacts, {
 				id: `${message.id}-artifact-${createdAt}`,
