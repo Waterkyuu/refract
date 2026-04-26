@@ -94,11 +94,17 @@ type ReasoningPipelinePart = {
 	durationSeconds?: number;
 };
 
+type TypstContentPipelinePart = {
+	type: "typst-content";
+	content: string;
+};
+
 type PipelinePart =
 	| TextPipelinePart
 	| ReasoningPipelinePart
 	| ToolPipelinePart
-	| ArtifactPipelinePart;
+	| ArtifactPipelinePart
+	| TypstContentPipelinePart;
 
 const STREAM_RENDER_THROTTLE_MS = 80;
 
@@ -667,6 +673,10 @@ const usePipelineChat = (
 								"typstContent" in evt.output &&
 								evt.output.typstContent
 							) {
+								assistantParts.push({
+									type: "typst-content",
+									content: evt.output.typstContent,
+								});
 								jotaiStore.set(showTypstWorkspaceAtom, evt.output.typstContent);
 							}
 							break;

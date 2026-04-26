@@ -483,6 +483,18 @@ const deriveWorkspaceSnapshotFromMessages = (
 			continue;
 		}
 
+		for (const part of message.parts) {
+			const partRecord = part as Record<string, unknown>;
+			if (
+				partRecord.type === "typst-content" &&
+				typeof partRecord.content === "string" &&
+				partRecord.content.length > 0
+			) {
+				snapshot.typstContent = partRecord.content;
+				markViewUpdated("typst");
+			}
+		}
+
 		const roundArtifacts = deriveRoundArtifactsFromMessage(message);
 		const roundEntries = [
 			...roundArtifacts.data,

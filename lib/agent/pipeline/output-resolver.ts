@@ -430,15 +430,7 @@ const extractTypstContent = (text: string): string | undefined => {
 const resolveReportOutput = (stepResult: StepExecutionResult): ReportOutput => {
 	const typstContent = extractTypstContent(stepResult.text);
 
-	console.log(
-		"[report-debug] extractTypstContent result:",
-		typstContent ? `found (${typstContent.length} chars)` : "NOT FOUND",
-	);
-	console.log("[report-debug] full text length:", stepResult.text.length);
-
 	if (!typstContent) {
-		console.error("[report-debug] FAILED to extract typst content. Full text:");
-		console.error(stepResult.text);
 		throw new Error("Report step did not produce typst content.");
 	}
 

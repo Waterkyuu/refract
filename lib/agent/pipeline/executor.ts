@@ -183,18 +183,6 @@ const executeStep = async (
 		}
 	}
 
-	if (step === "report") {
-		console.log(
-			"[report-debug] executeStep stream finished. fullText length:",
-			fullText,
-		);
-		console.log(
-			"[report-debug] toolResults:",
-			toolResults.map((t) => t.toolName),
-		);
-		console.log("[report-debug] toolErrors:", toolErrors);
-	}
-
 	return {
 		text: fullText,
 		toolErrors,
@@ -254,31 +242,7 @@ const executePipeline = async (
 					break;
 				}
 				case "report": {
-					console.log(
-						"[report-debug] stepResult.text length:",
-						stepResult.text.length,
-					);
-					console.log(
-						"[report-debug] stepResult.text (first 500 chars):",
-						stepResult.text.slice(0, 500),
-					);
-					console.log(
-						"[report-debug] stepResult.text (last 500 chars):",
-						stepResult.text.slice(-500),
-					);
-					console.log(
-						"[report-debug] toolResults count:",
-						stepResult.toolResults.length,
-					);
-					console.log(
-						"[report-debug] toolErrors:",
-						JSON.stringify(stepResult.toolErrors),
-					);
 					const output = resolveReportOutput(stepResult);
-					console.log(
-						"[report-debug] resolveReportOutput succeeded, typstContent length:",
-						output.typstContent.length,
-					);
 					ctx.reportOutput = output;
 					onEvent({ type: "step-complete", step, output });
 					break;
