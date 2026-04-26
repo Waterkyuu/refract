@@ -5,6 +5,8 @@ let $typst:
 	| Awaited<typeof import("@myriaddreamin/typst.ts/contrib/snippet")>["$typst"]
 	| null = null;
 
+const origin = self.location.origin;
+
 const initTypstCompiler = async () => {
 	try {
 		postMessage({
@@ -16,11 +18,11 @@ const initTypstCompiler = async () => {
 		$typst = typstModule.$typst;
 
 		$typst.setCompilerInitOptions({
-			getModule: () => "/typst_ts_web_compiler_bg.wasm",
+			getModule: () => `${origin}/typst_ts_web_compiler_bg.wasm`,
 		});
 
 		$typst.setRendererInitOptions({
-			getModule: () => "/typst_ts_renderer_bg.wasm",
+			getModule: () => `${origin}/typst_ts_renderer_bg.wasm`,
 		});
 
 		postMessage({
