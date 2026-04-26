@@ -101,6 +101,9 @@ importers:
       frimousse:
         specifier: ^0.3.0
         version: 0.3.0(react@19.2.3)(typescript@5.9.3)
+      iconv-lite:
+        specifier: ^0.7.2
+        version: 0.7.2
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
