@@ -31,8 +31,8 @@ Multi-agent orchestration supports data analysis and resume generation, with oth
 ### Installation
 
 ```bash
-git clone https://github.com/Waterkyuu/agent-dashboard.git
-cd agent-dashboard
+git clone https://github.com/Waterkyuu/refract.git
+cd refract
 pnpm install
 ```
 
