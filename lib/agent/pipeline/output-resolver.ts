@@ -1,4 +1,5 @@
 import { formatUnknownError } from "@/lib/agent/utils/error-utils";
+import { ensureTypstTextFallback } from "@/lib/typst/text-fallback";
 import {
 	type ChartOutput,
 	ChartOutputSchema,
@@ -434,7 +435,9 @@ const resolveReportOutput = (stepResult: StepExecutionResult): ReportOutput => {
 		throw new Error("Report step did not produce typst content.");
 	}
 
-	return ReportOutputSchema.parse({ typstContent });
+	return ReportOutputSchema.parse({
+		typstContent: ensureTypstTextFallback(typstContent),
+	});
 };
 
 export type { StepExecutionResult };

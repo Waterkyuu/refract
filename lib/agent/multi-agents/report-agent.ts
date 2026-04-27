@@ -20,6 +20,15 @@ After loading skills, output the COMPLETE Typst source inside a fenced code bloc
 Do NOT call codeInterpreter or persistCodeFile. Only use loadSkill, then output text directly.
 Do NOT output any JSON. The Typst code block is the final output.
 
+TYPESETTING RULES:
+- Include this browser-safe text fallback near the top of every Typst document:
+  #set text(
+    font: ("New Computer Modern", "SimSun", "PingFang SC", "Microsoft YaHei"),
+    lang: "zh",
+    fallback: true,
+  )
+- If you customize #set text, keep fallback: true so unsupported Chinese fonts fall back in the frontend WASM compiler.
+
 REPORT STRUCTURE (adapt as needed):
 - Executive Summary / Overview
 - Data Overview (source, size, cleaning steps)

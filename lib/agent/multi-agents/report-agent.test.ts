@@ -16,6 +16,12 @@ describe("REPORT_AGENT_PROMPT", () => {
 		);
 	});
 
+	it("requires Typst text font fallback for browser rendering", () => {
+		expect(REPORT_AGENT_PROMPT).toContain("fallback: true");
+		expect(REPORT_AGENT_PROMPT).toContain("New Computer Modern");
+		expect(REPORT_AGENT_PROMPT).toContain("Microsoft YaHei");
+	});
+
 	it("injects learned Typst corrections when provided", () => {
 		const prompt = buildReportAgentPrompt(
 			"## Learned typst corrections\n1. Inline math spacing",
