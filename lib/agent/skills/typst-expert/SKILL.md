@@ -141,6 +141,40 @@ a table listing all syntax that is available in code mode:
 | Import items from module | `{import "bar.typ": a, b, c}` | [Scripting]($scripting/#modules)   |
 | Comment                  | `{/* block */}`, `{// line}`  | [Below](#comments)                 |
 
+### Argument Spreading and Loops
+
+Argument spreading (`..`) can only spread arrays or argument lists. It cannot
+spread content blocks produced by `for { ... }`. If you write `..for ... { ... }`
+inside `grid()`, `stack()`, `table()`, or another function call, Typst reports
+`cannot spread content`.
+
+Wrong:
+
+```typst
+#grid(
+  columns: 12,
+  ..for i in range(12) {
+    rect(width: 100%, height: 20pt)
+  }
+)
+```
+
+Correct:
+
+```typst
+#grid(
+  columns: 12,
+  ..range(12).map(i => rect(
+    width: 100%,
+    height: 20pt + i * 2pt,
+  ))
+)
+```
+
+When generating repeated children for a layout function, use
+`..range(...).map(i => ...)` or prebuild an array, then spread that array. Never
+use `..for ... { ... }` as a function argument.
+
 ### Comments
 Comments are ignored by Typst and will not be included in the output. This is
 useful to exclude old versions or to add annotations. To comment out a single
@@ -281,6 +315,7 @@ Please note: Typst is **not** LaTeX, nor is it **standard Markdown**. They are i
 | **Greek Letters** | `\alpha`, `\beta` | `alpha`, `beta` | No backslash is needed. |
 | **Subscript** | `x_{i}` | `x_i` | Although `x_{i}` is also valid in Typst, it is recommended to use `x_i` or `x_(i)`. |
 | **Escaping** | `\#`, `\$` | `\#`, `\$` | To display `#` or `$` in text, they must be escaped. |
+| **Spread Loops** | `..for i in range(12) { ... }` | `..range(12).map(i => ...)` | `..` can only spread arrays or argument lists, not content blocks. Otherwise Typst reports `cannot spread content`. |
 
 ### Math mode
 Mathematical expressions are wrapped by `$`. Please strictly distinguish between **inline** and **block** formulas:
