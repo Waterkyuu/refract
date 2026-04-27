@@ -221,10 +221,9 @@ resources such as images, Typst files, or data files. Paths are represented as
   ```
 
 ## Mini Example
-```
-
+```typ
 #set page(paper: "a4", margin: 2.2cm)
-#set text(font: ("New Computer Modern", "Noto Serif CJK SC"), lang: "en", size: 11pt)
+#set text(font: ("New Computer Modern", "Noto Serif CJK SC"), lang: "en", size: 11pt, fallback: true)
 #set par(justify: true)
 
 = Title of Your Reinforcement Learning Paper
