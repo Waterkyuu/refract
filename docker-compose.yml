@@ -1,6 +1,6 @@
 services:
   app:
-    container_name: fire-wave-agent
+    container_name: refract
     build:
       context: .
       dockerfile: Dockerfile

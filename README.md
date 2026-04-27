@@ -94,8 +94,8 @@ docker compose --env-file .env.local up -d --build
 Or build and run the image directly:
 
 ```bash
-docker build -t fire-wave-agent .
-docker run -d -p 3000:3000 --env-file .env.local --name fire-wave-agent fire-wave-agent
+docker build -t refract .
+docker run -d -p 3000:3000 --env-file .env.local --name refract refract
 ```
 
 ### Authentication on Vercel
