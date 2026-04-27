@@ -79,7 +79,7 @@ const TypstPreview = () => {
 		if (isWorkerReady) {
 			workerRef.current.postMessage({
 				type: "compile",
-				typstContent,
+				content: typstContent,
 			});
 		} else {
 			// Store content to compile after worker is ready

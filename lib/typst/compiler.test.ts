@@ -2,24 +2,9 @@
  * @jest-environment node
  */
 
-import { configureTypstCompilerFonts, createTypstCompiler } from "./compiler";
+import { createTypstCompiler } from "./compiler";
 
 describe("compileTypst", () => {
-	it("configures backend Typst compiler with CJK font assets", () => {
-		const provider = { key: "font-assets" };
-		const createFontProvider = jest.fn(() => provider);
-		const compiler = {
-			use: jest.fn(),
-		};
-
-		configureTypstCompilerFonts(compiler, createFontProvider);
-
-		expect(createFontProvider).toHaveBeenCalledWith({
-			assets: ["text", "cjk", "emoji"],
-		});
-		expect(compiler.use).toHaveBeenCalledWith(provider);
-	});
-
 	it("compiles valid Typst content to SVG", async () => {
 		const compileTypst = createTypstCompiler({
 			svg: async ({ mainContent }) => `<svg>${mainContent}</svg>`,

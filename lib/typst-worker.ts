@@ -1,3 +1,4 @@
+import { configureTypstCompilerFonts } from "@/lib/typst/font-assets";
 import type { WorkerMessage, WorkerResponse } from "@/types/worker";
 
 let isInitialized = false;
@@ -16,6 +17,7 @@ const initTypstCompiler = async () => {
 
 		const typstModule = await import("@myriaddreamin/typst.ts/contrib/snippet");
 		$typst = typstModule.$typst;
+		configureTypstCompilerFonts($typst);
 
 		$typst.setCompilerInitOptions({
 			getModule: () => `${origin}/typst_ts_web_compiler_bg.wasm`,
