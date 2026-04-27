@@ -1,4 +1,4 @@
-# Fire Wave Agent
+# Refract.ai
 
 [English](./README.md) | [中文](./README-ZH.md)
 
