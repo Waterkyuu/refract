@@ -79,6 +79,21 @@ const assistantMessageWithMultipleCharts = {
 	],
 } as unknown as UIMessage;
 
+const assistantMessageWithInlineReport = {
+	id: "assistant-round-inline-report",
+	role: "assistant",
+	parts: [
+		{
+			type: "text",
+			text: "Report completed",
+		},
+		{
+			type: "markdown-content",
+			content: "# Analysis Report\n\nRevenue increased by 12%.",
+		},
+	],
+} as unknown as UIMessage;
+
 describe("AssistantMessage round artifact actions", () => {
 	it("renders per-category buttons with icon prefix and opens the selected artifact", () => {
 		const onSelectRoundArtifact = jest.fn();
@@ -146,5 +161,28 @@ describe("AssistantMessage round artifact actions", () => {
 		);
 
 		expect(screen.getByText("CSV 312 Bytes")).toBeInTheDocument();
+	});
+
+	it("renders inline markdown report as a round artifact action", () => {
+		const onSelectRoundArtifact = jest.fn();
+
+		render(
+			<MessageItem
+				message={assistantMessageWithInlineReport}
+				thinkingTime={null}
+				hasToolCalls={false}
+				onSelectRoundArtifact={onSelectRoundArtifact}
+			/>,
+		);
+
+		fireEvent.click(screen.getByRole("button", { name: /Report/i }));
+
+		expect(onSelectRoundArtifact).toHaveBeenCalledWith(
+			expect.objectContaining<Partial<WorkspaceRoundArtifact>>({
+				category: "report",
+				label: "Analysis Report",
+				markdownContent: "# Analysis Report\n\nRevenue increased by 12%.",
+			}),
+		);
 	});
 });

@@ -36,8 +36,7 @@ const ChartOutputSchema = z.object({
 });
 
 const ReportOutputSchema = z.object({
-	typstContent: z.string(),
-	compiledSvg: z.string().optional(),
+	markdownContent: z.string(),
 });
 
 type PipelineStep = z.infer<typeof PipelineStepSchema>;

@@ -51,7 +51,23 @@ ${ctx.plan.chartGoal ?? "Create appropriate visualizations from the cleaned data
 - Include all fields: chartCount, descriptions, artifacts.
 - If chart execution fails, still return valid JSON with chartCount=0 and a failure reason in descriptions.`;
 
-		case "report":
+		case "report": {
+			const chartArtifacts = ctx.chartOutput?.artifacts ?? [];
+			const chartDescriptions = ctx.chartOutput?.descriptions ?? [];
+			const chartSection =
+				chartArtifacts.length > 0
+					? chartArtifacts
+							.map((a, i) => {
+								const desc = chartDescriptions[i] ?? `Chart ${i + 1}`;
+								return `### Chart ${i + 1}\n- Description: ${desc}\n- Image URL: ![${desc}](${a.downloadUrl})\n- fileId: ${a.fileId}`;
+							})
+							.join("\n\n")
+					: chartDescriptions.length > 0
+						? chartDescriptions
+								.map((d, i) => `### Chart ${i + 1}\n${d}`)
+								.join("\n\n")
+						: "No charts generated";
+
 			return `${base}
 ## Data Summary
 ${ctx.dataOutput?.summary ?? "No data summary available"}
@@ -60,10 +76,11 @@ ${ctx.dataOutput?.summary ?? "No data summary available"}
 ${ctx.dataOutput?.stats ?? "N/A"}
 
 ## Charts (${ctx.chartOutput?.chartCount ?? 0} generated)
-${ctx.chartOutput?.descriptions.map((d, i) => `### Chart ${i + 1}\n${d}`).join("\n\n") ?? "No charts generated"}
+${chartSection}
 
 ## Goal
-${ctx.plan.reportGoal ?? "Write a comprehensive analysis report incorporating the data insights and chart descriptions"}`;
+${ctx.plan.reportGoal ?? "Write a comprehensive analysis report incorporating the data insights and chart images. Use the provided chart Image URLs to embed the actual chart images in the report."}`;
+		}
 	}
 };
 

@@ -1,4 +1,10 @@
-type WorkspaceView = "empty" | "vnc" | "chart" | "dataset" | "file" | "typst";
+type WorkspaceView =
+	| "empty"
+	| "vnc"
+	| "chart"
+	| "dataset"
+	| "file"
+	| "markdown";
 
 type WorkspaceChartImage = {
 	downloadUrl?: string;

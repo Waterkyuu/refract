@@ -3,7 +3,7 @@ import {
 	agentStatusAtom,
 	clearToolEventsAtom,
 	dispatchToolEventAtom,
-	showTypstWorkspaceAtom,
+	showMarkdownWorkspaceAtom,
 } from "@/atoms/chat";
 import loginDialogAtom from "@/atoms/login-dialog";
 import {
@@ -94,8 +94,8 @@ type ReasoningPipelinePart = {
 	durationSeconds?: number;
 };
 
-type TypstContentPipelinePart = {
-	type: "typst-content";
+type MarkdownContentPipelinePart = {
+	type: "markdown-content";
 	content: string;
 };
 
@@ -104,7 +104,7 @@ type PipelinePart =
 	| ReasoningPipelinePart
 	| ToolPipelinePart
 	| ArtifactPipelinePart
-	| TypstContentPipelinePart;
+	| MarkdownContentPipelinePart;
 
 const STREAM_RENDER_THROTTLE_MS = 80;
 
@@ -670,14 +670,17 @@ const usePipelineChat = (
 
 							if (
 								evt.step === "report" &&
-								"typstContent" in evt.output &&
-								evt.output.typstContent
+								"markdownContent" in evt.output &&
+								evt.output.markdownContent
 							) {
 								assistantParts.push({
-									type: "typst-content",
-									content: evt.output.typstContent,
+									type: "markdown-content",
+									content: evt.output.markdownContent,
 								});
-								jotaiStore.set(showTypstWorkspaceAtom, evt.output.typstContent);
+								jotaiStore.set(
+									showMarkdownWorkspaceAtom,
+									evt.output.markdownContent,
+								);
 							}
 							break;
 						}

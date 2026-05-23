@@ -11,6 +11,7 @@ import {
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
 	showFileWorkspaceAtom,
+	showMarkdownWorkspaceAtom,
 	vncUrlAtom,
 	workspaceChartAtom,
 	workspaceDatasetAtom,
@@ -70,8 +71,8 @@ const canKeepWorkspaceView = (
 			return Boolean(snapshot.dataset);
 		case "file":
 			return Boolean(snapshot.file);
-		case "typst":
-			return snapshot.typstContent.length > 0;
+		case "markdown":
+			return snapshot.markdownContent.length > 0;
 		case "vnc":
 			return snapshot.vncUrl.length > 0;
 		default:
@@ -346,6 +347,8 @@ const ChatPage = ({ params }: ChatPageProps) => {
 						filename: artifact.filename,
 					});
 				}
+			} else if (artifact.markdownContent) {
+				jotaiStore.set(showMarkdownWorkspaceAtom, artifact.markdownContent);
 			} else if (artifact.fileId && artifact.filename) {
 				jotaiStore.set(showFileWorkspaceAtom, {
 					downloadUrl: getFileDownloadUrl(

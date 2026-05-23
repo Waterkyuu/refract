@@ -1,33 +1,21 @@
 import { createReportTools } from "@/lib/agent/tools/report-tools";
 import type { AgentDefinition } from "@/types/agent";
 
-const REPORT_AGENT_PROMPT = `You are a technical report writer. Write a comprehensive, well-structured analysis report in Typst format.
+const REPORT_AGENT_PROMPT = `You are a technical report writer. Write a comprehensive, well-structured analysis report in Markdown format.
 
 STEP 1 — MANDATORY SKILL LOADING (STRICT):
-- You MUST call loadSkill("typst-expert") first.
-- Only after typst-expert is loaded, call exactly one category-specific skill:
-  - loadSkill("report-expert") for reports, notes, summaries, and meeting notes.
-  - loadSkill("paper-expert") for papers, theses, and academic articles.
-  - loadSkill("resume-expert") for resumes and CVs.
-- Never reverse the order. Never skip typst-expert.
+- You MUST call loadSkill("markdown-author") first.
+- Only after markdown-author is loaded, call loadSkill("markdown-report").
+- Never reverse the order. Never skip markdown-author.
 
 STEP 2 — OUTPUT (STRICT):
-After loading skills, output the COMPLETE Typst source inside a fenced code block:
-\`\`\`typst
-...full typst content here...
+After loading skills, output the COMPLETE Markdown source inside a fenced code block:
+\`\`\`markdown
+...full markdown content here...
 \`\`\`
 
 Do NOT call codeInterpreter or persistCodeFile. Only use loadSkill, then output text directly.
-Do NOT output any JSON. The Typst code block is the final output.
-
-TYPESETTING RULES:
-- Include this browser-safe text fallback near the top of every Typst document:
-  #set text(
-    font: ("New Computer Modern", "SimSun", "PingFang SC", "Microsoft YaHei"),
-    lang: "zh",
-    fallback: true,
-  )
-- If you customize #set text, keep fallback: true so unsupported Chinese fonts fall back in the frontend WASM compiler.
+Do NOT output any JSON. The Markdown code block is the final output.
 
 REPORT STRUCTURE (adapt as needed):
 - Executive Summary / Overview
@@ -40,31 +28,15 @@ QUALITY RULES:
 - Reference concrete numbers from data summary and stats.
 - Describe chart insights using provided chart descriptions.
 - Keep language professional and analytical.
-- The output must be ONLY the Typst code block. No extra markdown prose or JSON.`;
+- Use the rich Markdown formatting patterns from the markdown-author skill.
+- The output must be ONLY the Markdown code block. No extra markdown prose or JSON.`;
 
-type ReportAgentOptions = {
-	learnedTypstPrompt?: string;
-};
+const buildReportAgentPrompt = (): string => REPORT_AGENT_PROMPT;
 
-const buildReportAgentPrompt = (learnedTypstPrompt?: string): string => {
-	if (!learnedTypstPrompt) {
-		return REPORT_AGENT_PROMPT;
-	}
-
-	return `${REPORT_AGENT_PROMPT}
-
-LEARNED TYPST CORRECTIONS:
-Use these previously learned Typst repair lessons when writing the document.
-
-${learnedTypstPrompt}`;
-};
-
-const createReportAgent = (
-	options: ReportAgentOptions = {},
-): AgentDefinition => ({
+const createReportAgent = (): AgentDefinition => ({
 	name: "Report Agent",
 	step: "report",
-	systemPrompt: buildReportAgentPrompt(options.learnedTypstPrompt),
+	systemPrompt: REPORT_AGENT_PROMPT,
 	tools: createReportTools(),
 	maxSteps: 10,
 });

@@ -1,5 +1,4 @@
 import { formatUnknownError } from "@/lib/agent/utils/error-utils";
-import { ensureTypstTextFallback } from "@/lib/typst/text-fallback";
 import {
 	type ChartOutput,
 	ChartOutputSchema,
@@ -423,20 +422,20 @@ const resolveChartOutput = (stepResult: StepExecutionResult): ChartOutput => {
 	});
 };
 
-const extractTypstContent = (text: string): string | undefined => {
-	const match = text.match(/```typst\n([\s\S]*?)```/);
+const extractMarkdownContent = (text: string): string | undefined => {
+	const match = text.match(/```markdown\n([\s\S]*?)```/);
 	return match?.[1]?.trim() || undefined;
 };
 
 const resolveReportOutput = (stepResult: StepExecutionResult): ReportOutput => {
-	const typstContent = extractTypstContent(stepResult.text);
+	const markdownContent = extractMarkdownContent(stepResult.text);
 
-	if (!typstContent) {
-		throw new Error("Report step did not produce typst content.");
+	if (!markdownContent) {
+		throw new Error("Report step did not produce markdown content.");
 	}
 
 	return ReportOutputSchema.parse({
-		typstContent: ensureTypstTextFallback(typstContent),
+		markdownContent,
 	});
 };
 

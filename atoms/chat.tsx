@@ -142,7 +142,8 @@ const workspaceViewAtom = createWorkspaceFieldAtom("view");
 const workspaceChartAtom = createWorkspaceFieldAtom("chart");
 const workspaceDatasetAtom = createWorkspaceFieldAtom("dataset");
 const workspaceFileAtom = createWorkspaceFieldAtom("file");
-const workspaceTypstContentAtom = createWorkspaceFieldAtom("typstContent");
+const workspaceMarkdownContentAtom =
+	createWorkspaceFieldAtom("markdownContent");
 
 const agentStatusAtom = atom<AgentStatus>("idle");
 
@@ -189,9 +190,9 @@ const showFileWorkspaceAtom = atom(null, (_get, set, file: WorkspaceFile) => {
 	set(workspaceViewAtom, "file");
 });
 
-const showTypstWorkspaceAtom = atom(null, (_get, set, content: string) => {
-	set(workspaceTypstContentAtom, content);
-	set(workspaceViewAtom, "typst");
+const showMarkdownWorkspaceAtom = atom(null, (_get, set, content: string) => {
+	set(workspaceMarkdownContentAtom, content);
+	set(workspaceViewAtom, "markdown");
 });
 
 export {
@@ -210,7 +211,7 @@ export {
 	workspaceChartAtom,
 	workspaceDatasetAtom,
 	workspaceFileAtom,
-	workspaceTypstContentAtom,
+	workspaceMarkdownContentAtom,
 	agentStatusAtom,
 	toolEventsAtom,
 	dispatchToolEventAtom,
@@ -219,5 +220,5 @@ export {
 	showChartWorkspaceAtom,
 	showDatasetWorkspaceAtom,
 	showFileWorkspaceAtom,
-	showTypstWorkspaceAtom,
+	showMarkdownWorkspaceAtom,
 };

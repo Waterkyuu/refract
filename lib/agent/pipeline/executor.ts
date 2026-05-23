@@ -3,15 +3,6 @@ import { createDataAgent } from "@/lib/agent/multi-agents/data-agent";
 import { runOrchestrator } from "@/lib/agent/multi-agents/orchestrator";
 import { createReportAgent } from "@/lib/agent/multi-agents/report-agent";
 import {
-	buildTypstRepairPrompt,
-	createTypstRepairAgent,
-} from "@/lib/agent/multi-agents/typst-repair-agent";
-import {
-	TYPST_REVIEW_AGENT_PROMPT,
-	buildTypstReviewPrompt,
-	parseTypstReviewOutput,
-} from "@/lib/agent/multi-agents/typst-review-agent";
-import {
 	buildStepPrompt,
 	createInitialContext,
 } from "@/lib/agent/pipeline/context";
@@ -23,17 +14,10 @@ import {
 	resolveDataOutput,
 	resolveReportOutput,
 } from "@/lib/agent/pipeline/output-resolver";
-import { compileAndRepairTypst } from "@/lib/agent/pipeline/typst-repair";
 import type { SandboxSession } from "@/lib/agent/sandbox/e2b";
 import { formatUnknownError } from "@/lib/agent/utils/error-utils";
-import {
-	buildLearnMemoryPrompt,
-	upsertLearnMemory,
-} from "@/lib/agent/utils/learn-memories";
 import { getFileDownloadUrl } from "@/lib/file-store";
-import { compileTypst } from "@/lib/typst/compiler";
 import type { FileRecord } from "@/types";
-import { ReportOutputSchema } from "@/types/agent";
 import type {
 	AgentDefinition,
 	PipelineContext,
@@ -135,69 +119,6 @@ const ensurePersistedChartArtifacts = async (
 	};
 };
 
-const loadLearnedTypstPrompt = async (): Promise<string> => {
-	try {
-		return await buildLearnMemoryPrompt("typst");
-	} catch {
-		return "";
-	}
-};
-
-type LearnFromTypstRepairOptions = {
-	diagnostics: string;
-	originalTypst: string;
-	repairedTypst: string;
-};
-
-const learnFromTypstRepair = async ({
-	diagnostics,
-	originalTypst,
-	repairedTypst,
-}: LearnFromTypstRepairOptions): Promise<void> => {
-	const result = await streamText({
-		system: TYPST_REVIEW_AGENT_PROMPT,
-		model: zhipu(MAIN_MODEL),
-		messages: [
-			{
-				role: "user",
-				content: buildTypstReviewPrompt({
-					diagnostics,
-					originalTypst,
-					repairedTypst,
-				}),
-			},
-		],
-		stopWhen: stepCountIs(1),
-	});
-
-	let fullText = "";
-	for await (const part of result.fullStream) {
-		if (part.type === "text-delta") {
-			fullText += part.text;
-		}
-	}
-
-	const learning = parseTypstReviewOutput(fullText);
-	if (!learning) {
-		return;
-	}
-
-	await upsertLearnMemory({
-		type: "typst",
-		title: learning.title,
-		content: learning.content,
-	});
-};
-
-const scheduleTypstRepairLearning = (
-	options: LearnFromTypstRepairOptions,
-): void => {
-	const learningTask = learnFromTypstRepair(options);
-	learningTask.catch((error) => {
-		console.error("[Typst Learning Error]", error);
-	});
-};
-
 const executeStep = async (
 	agent: AgentDefinition,
 	stepPrompt: string,
@@ -286,13 +207,10 @@ const executePipeline = async (
 		return createInitialContext(userRequest, attachedFiles, pipelinePlan);
 	}
 
-	const learnedTypstPrompt = await loadLearnedTypstPrompt();
 	const agentMap: Record<PipelineStep, AgentDefinition> = {
 		data: createDataAgent({ fileIds, sandboxSession }),
 		chart: createChartAgent({ fileIds, sandboxSession }),
-		report: createReportAgent({
-			learnedTypstPrompt,
-		}),
+		report: createReportAgent(),
 	};
 
 	const ctx = createInitialContext(userRequest, attachedFiles, pipelinePlan);
@@ -324,71 +242,7 @@ const executePipeline = async (
 					break;
 				}
 				case "report": {
-					const initialOutput = resolveReportOutput(stepResult);
-					console.log(
-						"[DEBUG] report-agent generated typstContent:\n",
-						initialOutput.typstContent,
-					);
-					const repairAgent = createTypstRepairAgent();
-					const compileResult = await compileAndRepairTypst(
-						initialOutput.typstContent,
-						{
-							compileTypst: async (content) => {
-								console.log("[DEBUG] compileTypst input (attempt):\n", content);
-								const result = await compileTypst(content);
-								console.log(
-									"[DEBUG] compileTypst result ok:",
-									result.ok,
-									result.ok
-										? ""
-										: `error: ${result.error}, diagnostics: ${result.diagnostics}`,
-								);
-								return result;
-							},
-							repairTypst: async ({ attempt, content, diagnostics }) => {
-								console.log(
-									"[DEBUG] repairTypst attempt:",
-									attempt,
-									"diagnostics:",
-									diagnostics,
-								);
-								const repairResult = await executeStep(
-									repairAgent,
-									buildTypstRepairPrompt({
-										attempt,
-										content,
-										diagnostics,
-										learnedTypstPrompt,
-									}),
-									step,
-									() => undefined,
-								);
-								const repairedContent =
-									resolveReportOutput(repairResult).typstContent;
-								console.log("[DEBUG] repairTypst output:\n", repairedContent);
-								return repairedContent;
-							},
-						},
-					);
-
-					if (!compileResult.ok) {
-						throw new Error(
-							`Report Typst failed to compile after ${compileResult.repairCount} repair attempts.\n\n${compileResult.diagnostics}`,
-						);
-					}
-
-					const output = ReportOutputSchema.parse({
-						typstContent: compileResult.typstContent,
-						compiledSvg: compileResult.svg,
-					});
-					const firstRepairAttempt = compileResult.repairAttempts.at(0);
-					if (firstRepairAttempt) {
-						scheduleTypstRepairLearning({
-							diagnostics: firstRepairAttempt.diagnostics,
-							originalTypst: firstRepairAttempt.input,
-							repairedTypst: compileResult.typstContent,
-						});
-					}
+					const output = resolveReportOutput(stepResult);
 					ctx.reportOutput = output;
 					onEvent({ type: "step-complete", step, output });
 					break;

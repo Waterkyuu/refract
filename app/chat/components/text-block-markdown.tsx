@@ -1,6 +1,11 @@
+import "katex/dist/katex.min.css";
 import { cn } from "@/lib/utils";
 import { type ComponentPropsWithoutRef, memo, useDeferredValue } from "react";
 import Markdown, { type Components } from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 
 type TextBlockMarkdownProps = {
 	text: string;
@@ -100,7 +105,11 @@ const TextBlockMarkdown = memo(({ text }: TextBlockMarkdownProps) => {
 
 	return (
 		<div className="prose prose-sm max-w-full prose-pre:max-w-full prose-pre:overflow-x-auto break-words prose-headings:break-words prose-li:break-words prose-p:break-words prose-code:break-all">
-			<Markdown components={TEXT_BLOCK_MARKDOWN_COMPONENTS}>
+			<Markdown
+				remarkPlugins={[remarkGfm, remarkMath]}
+				rehypePlugins={[rehypeRaw, rehypeKatex]}
+				components={TEXT_BLOCK_MARKDOWN_COMPONENTS}
+			>
 				{deferredText}
 			</Markdown>
 		</div>

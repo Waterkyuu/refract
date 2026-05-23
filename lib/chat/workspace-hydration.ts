@@ -20,6 +20,7 @@ type WorkspaceRoundArtifact = {
 	downloadUrl?: string;
 	extension?: string;
 	chart?: Record<string, unknown>;
+	markdownContent?: string;
 	title?: string;
 	toolCallId?: string;
 };
@@ -38,7 +39,7 @@ type WorkspaceSnapshot = {
 	chart: WorkspaceChart | null;
 	dataset: WorkspaceDataset | null;
 	file: WorkspaceFile | null;
-	typstContent: string;
+	markdownContent: string;
 };
 
 const EMPTY_WORKSPACE_SNAPSHOT: WorkspaceSnapshot = {
@@ -47,7 +48,7 @@ const EMPTY_WORKSPACE_SNAPSHOT: WorkspaceSnapshot = {
 	chart: null,
 	dataset: null,
 	file: null,
-	typstContent: "",
+	markdownContent: "",
 };
 
 const EMPTY_WORKSPACE_ROUND_ARTIFACTS: WorkspaceRoundArtifacts = {
@@ -98,6 +99,16 @@ const getFileDownloadUrl = (
 		return `/api/file/${fileId}/download`;
 	}
 	return undefined;
+};
+
+const getMarkdownReportLabel = (content: string): string => {
+	const heading = content
+		.split("\n")
+		.map((line) => line.trim())
+		.find((line) => line.startsWith("#"));
+	const normalizedHeading = heading?.replace(/^#+\s*/, "").trim();
+
+	return normalizedHeading || "Generated report";
 };
 
 // Resolve dataset attachments from user metadata even when preview is omitted.
@@ -280,6 +291,25 @@ const deriveRoundArtifactsFromMessage = (
 					typeof partRecord.toolCallId === "string"
 						? partRecord.toolCallId
 						: undefined,
+			});
+			continue;
+		}
+
+		if (
+			partRecord.type === "markdown-content" &&
+			typeof partRecord.content === "string" &&
+			partRecord.content.trim().length > 0
+		) {
+			const createdAt = nextCreatedAt();
+			const markdownContent = partRecord.content.trim();
+			const label = getMarkdownReportLabel(markdownContent);
+			pushRoundArtifact(artifacts, {
+				id: `${message.id}-report-markdown-${createdAt}`,
+				category: "report",
+				createdAt,
+				label,
+				markdownContent,
+				title: label,
 			});
 			continue;
 		}
@@ -486,12 +516,12 @@ const deriveWorkspaceSnapshotFromMessages = (
 		for (const part of message.parts) {
 			const partRecord = part as Record<string, unknown>;
 			if (
-				partRecord.type === "typst-content" &&
+				partRecord.type === "markdown-content" &&
 				typeof partRecord.content === "string" &&
 				partRecord.content.length > 0
 			) {
-				snapshot.typstContent = partRecord.content;
-				markViewUpdated("typst");
+				snapshot.markdownContent = partRecord.content;
+				markViewUpdated("markdown");
 			}
 		}
 
@@ -539,6 +569,11 @@ const deriveWorkspaceSnapshotFromMessages = (
 			}
 
 			if (artifact.category === "report") {
+				if (artifact.markdownContent) {
+					snapshot.markdownContent = artifact.markdownContent;
+					markViewUpdated("markdown");
+					continue;
+				}
 				if (!artifact.fileId || !artifact.filename) {
 					continue;
 				}

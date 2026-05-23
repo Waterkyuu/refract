@@ -325,4 +325,28 @@ describe("workspace hydration", () => {
 		);
 		expect(snapshot.view).toBe("dataset");
 	});
+
+	it("derives report artifacts from inline markdown content", () => {
+		const assistantMessage: UIMessage = {
+			id: "assistant-inline-report",
+			role: "assistant",
+			parts: [
+				{
+					type: "markdown-content",
+					content: "# Analysis Report\n\nRevenue increased by 12%.",
+				} as unknown as UIMessage["parts"][number],
+			],
+		};
+
+		const artifacts = deriveRoundArtifactsFromMessage(assistantMessage);
+
+		expect(artifacts.report).toHaveLength(1);
+		expect(artifacts.report[0]).toEqual(
+			expect.objectContaining({
+				category: "report",
+				label: "Analysis Report",
+				markdownContent: "# Analysis Report\n\nRevenue increased by 12%.",
+			}),
+		);
+	});
 });

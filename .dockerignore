@@ -4,6 +4,7 @@
 .next
 .swc
 .vscode
+.agents
 coverage
 node_modules
 

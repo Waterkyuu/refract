@@ -8,7 +8,7 @@ import {
 	workspaceChartAtom,
 	workspaceDatasetAtom,
 	workspaceFileAtom,
-	workspaceTypstContentAtom,
+	workspaceMarkdownContentAtom,
 	workspaceViewAtom,
 } from "@/atoms/chat";
 import { act, render, waitFor } from "@testing-library/react";
@@ -123,7 +123,7 @@ describe("ChatPage workspace reset", () => {
 			fileId: "old-file",
 			filename: "old.csv",
 		});
-		jotaiStore.set(workspaceTypstContentAtom, "old typst");
+		jotaiStore.set(workspaceMarkdownContentAtom, "old markdown");
 		jotaiStore.set(pendingHomePromptAtom, "");
 		jotaiStore.set(pendingHomeUploadsAtom, []);
 	});
@@ -141,7 +141,7 @@ describe("ChatPage workspace reset", () => {
 			expect(jotaiStore.get(workspaceChartAtom)).toBeNull();
 			expect(jotaiStore.get(workspaceDatasetAtom)).toBeNull();
 			expect(jotaiStore.get(workspaceFileAtom)).toBeNull();
-			expect(jotaiStore.get(workspaceTypstContentAtom)).toBe("");
+			expect(jotaiStore.get(workspaceMarkdownContentAtom)).toBe("");
 		});
 	});
 

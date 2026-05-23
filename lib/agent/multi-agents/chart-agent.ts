@@ -59,7 +59,10 @@ No markdown fences, no explanation text before or after.
 
 {
   "chartCount": <number>,
-  "descriptions": ["Chart 1: ...", "Chart 2: ..."],
+  "descriptions": [
+    "Chart 1: <detailed description of what the chart shows, including key insights, axis labels, and data trends>",
+    "Chart 2: <detailed description>"
+  ],
   "artifacts": [
     {
       "fileId": "<from persistAllCharts result>",
@@ -68,6 +71,9 @@ No markdown fences, no explanation text before or after.
     }
   ]
 }
+
+Each description MUST be detailed enough that a report writer can understand the chart without seeing it.
+Include: chart type, what is plotted (x-axis, y-axis), key values/trends, and the main insight.
 
 If code execution fails or no chart can be generated, output:
 {"chartCount": 0, "descriptions": ["<failure reason>"]}`;

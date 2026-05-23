@@ -3,15 +3,10 @@ import { findSkill, getSkillList, getSkills } from "./index";
 describe("skill loader", () => {
 	it("loads all skills from disk", () => {
 		const skills = getSkills();
-		expect(skills).toHaveLength(4);
+		expect(skills).toHaveLength(2);
 
 		const names = skills.map((s) => s.name).sort();
-		expect(names).toEqual([
-			"paper-expert",
-			"report-expert",
-			"resume-expert",
-			"typst-expert",
-		]);
+		expect(names).toEqual(["markdown-author", "markdown-report"]);
 	});
 
 	it("each skill has non-empty name, description and content", () => {
@@ -23,23 +18,14 @@ describe("skill loader", () => {
 	});
 
 	it("findSkill returns the correct skill by name", () => {
-		const typst = findSkill("typst-expert");
-		expect(typst).toBeDefined();
-		expect(typst?.name).toBe("typst-expert");
-		expect(typst?.content).toContain("#set page");
-		expect(typst?.content).toContain("Typst is **not** LaTeX");
+		const author = findSkill("markdown-author");
+		expect(author).toBeDefined();
+		expect(author?.name).toBe("markdown-author");
+		expect(author?.content).toContain("Badge");
 
-		const paper = findSkill("paper-expert");
-		expect(paper).toBeDefined();
-		expect(paper?.content).toContain("graceful-genetics");
-
-		const report = findSkill("report-expert");
+		const report = findSkill("markdown-report");
 		expect(report).toBeDefined();
-		expect(report?.content).toContain("obsidius");
-
-		const resume = findSkill("resume-expert");
-		expect(resume).toBeDefined();
-		expect(resume?.content).toContain("Jane Doe");
+		expect(report?.name).toBe("markdown-report");
 	});
 
 	it("findSkill returns undefined for unknown skill", () => {
@@ -48,12 +34,10 @@ describe("skill loader", () => {
 
 	it("getSkillList formats skills as markdown bullet list", () => {
 		const list = getSkillList();
-		expect(list).toContain("- **typst-expert**:");
-		expect(list).toContain("- **paper-expert**:");
-		expect(list).toContain("- **report-expert**:");
-		expect(list).toContain("- **resume-expert**:");
+		expect(list).toContain("- **markdown-author**:");
+		expect(list).toContain("- **markdown-report**:");
 
 		const lines = list.split("\n");
-		expect(lines).toHaveLength(4);
+		expect(lines).toHaveLength(2);
 	});
 });
